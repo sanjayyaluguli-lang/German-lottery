@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Lotto &amp; EuroJackpot Smart Generator</title>
+<meta name="description" content="Client-side number generator for EuroJackpot and Lotto 6 aus 49 with a transparent decision matrix and an adaptive learning loop. Entertainment only." />
+<meta name="theme-color" content="#0A0E1C" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: { extend: {
+      colors: {
+        pitch: '#0A0E1C', felt: '#141B33', edge: '#243055', haze: '#8B96BC',
+        ivory: '#F3EDE1', gold: '#E9B44C', ember: '#E2574C', mint: '#5FCFA8', iris: '#8B8BFF'
+      },
+      fontFamily: {
+        display: ['Syne', 'system-ui', 'sans-serif'],
+        sans: ['"Instrument Sans"', 'system-ui', 'sans-serif'],
+        mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace']
+      }
+    }}
+  };
+</script>
+
+<style>
+  :root { color-scheme: dark; }
+  body {
+    background:
+      radial-gradient(1100px 520px at 50% -180px, rgba(233,180,76,.12), transparent 70%),
+      radial-gradient(700px 420px at 10% 10%, rgba(139,139,255,.10), transparent 70%),
+      #0A0E1C;
+  }
+  .tabular { font-variant-numeric: tabular-nums; }
+
+  /* ---- Draw ball -------------------------------------------------------- */
+  .ball {
+    position: relative; display: grid; place-items: center; border-radius: 9999px;
+    font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.02em; color: #14182B;
+    background: radial-gradient(circle at 32% 26%, #fff 0%, var(--b1) 22%, var(--b2) 68%, var(--b3) 100%);
+    box-shadow: inset 0 -7px 14px rgba(0,0,0,.30), inset 0 3px 6px rgba(255,255,255,.35), 0 10px 20px -10px rgba(0,0,0,.95);
+  }
+  .ball::after {
+    content: ''; position: absolute; top: 11%; left: 20%; width: 34%; height: 22%; border-radius: 9999px;
+    background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,0)); filter: blur(1px); pointer-events: none;
+  }
+  .ball--main  { --b1:#FBF7EF; --b2:#E4DCCA; --b3:#B9AE96; }
+  .ball--euro  { --b1:#FFDF9E; --b2:#E9B44C; --b3:#A9711D; }
+  .ball--super { --b1:#FFB0A6; --b2:#E2574C; --b3:#8E2820; color:#2A0B08; }
+  .ball--hit   { --b1:#B4F2DA; --b2:#5FCFA8; --b3:#1E7A5C; color:#052018; }
+  .ball--ghost { background:none; box-shadow:inset 0 0 0 1px #243055; color:#3A466E; }
+  .ball--ghost::after { display:none; }
+
+  @keyframes drop {
+    0% { transform: translateY(-30px) scale(.82); opacity: 0; }
+    62% { transform: translateY(5px) scale(1.05); opacity: 1; }
+    82% { transform: translateY(-2px) scale(.99); }
+    100% { transform: none; }
+  }
+  .drop { animation: drop .46s cubic-bezier(.2,.9,.25,1.15) backwards; animation-delay: calc(var(--i,0) * 60ms); }
+  @keyframes tumble { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
+  .tumbling { animation: tumble .32s ease-in-out infinite; }
+  @keyframes flash { 0% { background-color: rgba(95,207,168,.22) } 100% { background-color: transparent } }
+  .flash { animation: flash 1.4s ease-out; }
+
+  /* ---- Ticket stub ------------------------------------------------------ */
+  .stub { position: relative; }
+  .stub::before, .stub::after {
+    content: ''; position: absolute; top: 50%; width: 16px; height: 16px;
+    background: #0A0E1C; border-radius: 9999px; transform: translateY(-50%);
+  }
+  .stub::before { left: -9px; } .stub::after { right: -9px; }
+  .perf { border-top: 1px dashed #2B3860; }
+
+  /* ---- Misc ------------------------------------------------------------- */
+  .heat { transition: transform .12s ease; }
+  .heat:hover { transform: translateY(-2px); }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: #243055; border-radius: 9999px; }
+  :focus-visible { outline: 2px solid #E9B44C; outline-offset: 2px; border-radius: 6px; }
+  [hidden] { display: none !important; }
+  input[type=number]::-webkit-inner-spin-button { opacity: .35; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .drop, .tumbling, .flash { animation: none !important; }
+    * { transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+
+<body class="min-h-screen font-sans text-ivory antialiased selection:bg-gold selection:text-pitch">
+
+<header class="mx-auto w-full max-w-4xl px-4 pt-8 sm:pt-12">
+  <p class="font-mono text-[11px] uppercase tracking-[.22em] text-haze">Ziehung &middot; everything runs in your browser</p>
+  <h1 class="mt-2 font-display text-3xl font-extrabold leading-[0.95] tracking-tight sm:text-5xl">
+    Lotto &amp; EuroJackpot<br /><span class="text-gold">Smart Generator</span>
+  </h1>
+
+  <!-- Always-visible disclaimer -->
+  <p class="mt-5 rounded-xl border border-ember/40 bg-ember/10 px-4 py-3 text-[13px] leading-relaxed text-ember">
+    Lotteries are random. Past results and this learning system do not improve the mathematical odds of
+    winning. This tool is for entertainment and statistical exploration only. 18+.
+  </p>
+
+  <!-- Main navigation -->
+  <nav role="tablist" aria-label="Sections" class="mt-6 flex gap-1 overflow-x-auto rounded-xl border border-edge bg-felt/70 p-1">
+    <button role="tab" data-view="generate"  class="view-tab whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-semibold transition">Generate</button>
+    <button role="tab" data-view="matrix"    class="view-tab whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-semibold transition">Decision Matrix</button>
+    <button role="tab" data-view="learning"  class="view-tab whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-semibold transition">Learning</button>
+    <button role="tab" data-view="stats"     class="view-tab whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-semibold transition">Statistics</button>
+  </nav>
+
+  <!-- Game switch (shared by every view) -->
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <div role="tablist" aria-label="Game" class="inline-flex rounded-full border border-edge bg-felt/70 p-1">
+      <button role="tab" data-game="euro"  class="game-tab rounded-full px-4 py-1.5 text-sm font-semibold transition">EuroJackpot</button>
+      <button role="tab" data-game="lotto" class="game-tab rounded-full px-4 py-1.5 text-sm font-semibold transition">Lotto 6aus49</button>
+    </div>
+    <p id="gameInfo" class="font-mono text-[11px] text-haze"></p>
+  </div>
+</header>
+
+<main class="mx-auto w-full max-w-4xl px-4 pb-24 pt-6">
+
+<!-- ======================= VIEW: GENERATE ======================= -->
+<section id="view-generate">
+  <div class="rounded-2xl border border-edge bg-felt/60 p-4 sm:p-5">
+    <p class="mb-2 font-mono text-[11px] uppercase tracking-[.16em] text-haze">Generation mode</p>
+    <div id="modeGrid" class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3"></div>
+
+    <!-- Monte Carlo iterations -->
+    <div id="mcWrap" class="mt-4 rounded-xl border border-edge bg-pitch/50 p-3.5">
+      <div class="flex items-center justify-between">
+        <label for="mcIter" class="text-sm font-semibold">Monte Carlo iterations</label>
+        <output id="mcOut" class="tabular font-mono text-sm text-gold">100,000</output>
+      </div>
+      <input id="mcIter" type="range" min="10000" max="1000000" step="10000" value="100000"
+             class="mt-3 w-full accent-[#E9B44C]" />
+      <p class="mt-2 font-mono text-[11px] text-haze">
+        Runs in a Web Worker. More iterations only sharpen the estimate of the frequency model &mdash; they do not
+        make a combination more likely to win.
+      </p>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-end gap-x-6 gap-y-4 border-t border-edge pt-4">
+      <div>
+        <label for="ticketCount" class="mb-1.5 block font-mono text-[11px] uppercase tracking-[.16em] text-haze">Tickets</label>
+        <div class="flex items-center gap-2">
+          <button id="minusBtn" aria-label="One ticket fewer" class="h-9 w-9 rounded-lg border border-edge text-lg leading-none text-haze hover:border-gold hover:text-gold">&minus;</button>
+          <input id="ticketCount" type="number" min="1" max="10" value="1" inputmode="numeric"
+                 class="tabular h-9 w-14 rounded-lg border border-edge bg-pitch text-center text-base font-semibold" />
+          <button id="plusBtn" aria-label="One ticket more" class="h-9 w-9 rounded-lg border border-edge text-lg leading-none text-haze hover:border-gold hover:text-gold">+</button>
+        </div>
+      </div>
+      <label id="superWrap" class="flex cursor-pointer items-center gap-2.5 pb-1.5">
+        <input id="superToggle" type="checkbox" checked class="h-4 w-4 accent-[#E2574C]" />
+        <span class="text-sm">Superzahl <span class="text-haze">(0&ndash;9)</span></span>
+      </label>
+    </div>
+
+    <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <button id="generateBtn"
+        class="w-full rounded-xl bg-gold px-6 py-3.5 font-display text-lg font-extrabold tracking-tight text-pitch transition hover:brightness-110 active:scale-[.99] disabled:opacity-60 sm:w-auto">
+        Generate numbers
+      </button>
+      <p class="font-mono text-[11px] text-haze">
+        <kbd class="rounded border border-edge px-1.5 py-0.5">Space</kbd> or
+        <kbd class="rounded border border-edge px-1.5 py-0.5">Enter</kbd> to draw again
+      </p>
+    </div>
+    <div id="mcProgress" hidden class="mt-3">
+      <div class="h-1.5 w-full overflow-hidden rounded-full bg-edge">
+        <div id="mcBar" class="h-full w-0 bg-gold transition-[width] duration-100"></div>
+      </div>
+      <p id="mcLabel" class="mt-1.5 font-mono text-[11px] text-haze"></p>
+    </div>
+  </div>
+
+  <section class="mt-6">
+    <div class="mb-3 flex items-center justify-between">
+      <h2 class="font-mono text-[11px] uppercase tracking-[.18em] text-haze">Your tickets</h2>
+      <div id="ticketActions" hidden class="flex gap-4">
+        <button id="copyAllBtn" class="font-mono text-[11px] text-haze underline underline-offset-4 hover:text-gold">Copy all numbers</button>
+      </div>
+    </div>
+
+    <div id="emptyState" class="rounded-2xl border border-dashed border-edge px-6 py-12 text-center">
+      <div class="mx-auto flex w-fit gap-2">
+        <span class="ball ball--ghost h-11 w-11 text-base">?</span>
+        <span class="ball ball--ghost h-11 w-11 text-base">?</span>
+        <span class="ball ball--ghost h-11 w-11 text-base">?</span>
+      </div>
+      <p class="mt-5 font-display text-xl font-bold">The drum is still empty</p>
+      <p class="mx-auto mt-1.5 max-w-sm text-sm text-haze">
+        Pick a mode and hit Generate. Every ticket is saved as a prediction, so you can record the official
+        result later and watch the matrix react.
+      </p>
+    </div>
+    <div id="tickets" class="space-y-3"></div>
+  </section>
+
+  <p id="odds" class="mt-6 font-mono text-[11px] leading-relaxed text-haze"></p>
+</section>
+
+<!-- ======================= VIEW: DECISION MATRIX ======================= -->
+<section id="view-matrix" hidden>
+  <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <p class="max-w-lg text-sm text-haze">
+      Every strategy is scored against the same yardstick: how many numbers it actually matched, compared with
+      what pure chance would deliver. <span class="text-ivory">Weight 50 means &ldquo;exactly as good as random&rdquo;.</span>
+    </p>
+    <button id="exportMatrixBtn" class="shrink-0 font-mono text-[11px] text-haze underline underline-offset-4 hover:text-gold">Export matrix CSV</button>
+  </div>
+
+  <div class="overflow-x-auto rounded-2xl border border-edge bg-felt/40">
+    <table class="w-full min-w-[720px] text-left text-sm">
+      <thead class="border-b border-edge font-mono text-[10px] uppercase tracking-wider text-haze">
+        <tr>
+          <th class="cursor-pointer px-4 py-3" data-sort="label">Strategy</th>
+          <th class="cursor-pointer px-3 py-3" data-sort="predictions">Predictions</th>
+          <th class="cursor-pointer px-3 py-3" data-sort="evaluated">Evaluated</th>
+          <th class="cursor-pointer px-3 py-3" data-sort="avgMatched">Avg matched</th>
+          <th class="px-3 py-3">Tier hits</th>
+          <th class="cursor-pointer px-3 py-3" data-sort="prizeRate">Prize rate</th>
+          <th class="cursor-pointer px-3 py-3" data-sort="edge">Edge</th>
+          <th class="cursor-pointer px-3 py-3" data-sort="weight">Weight</th>
+        </tr>
+      </thead>
+      <tbody id="matrixBody"></tbody>
+    </table>
+  </div>
+
+  <div id="matrixCards" class="mt-4 grid gap-3 sm:grid-cols-2"></div>
+
+  <p class="mt-4 font-mono text-[11px] leading-relaxed text-haze">
+    Edge = average matched value divided by the value pure chance produces. Weight shrinks that edge toward 50
+    while the sample is small, so a strategy needs a real track record before it can dominate the ensemble.
+  </p>
+</section>
+
+<!-- ======================= VIEW: LEARNING ======================= -->
+<section id="view-learning" hidden>
+  <div class="rounded-2xl border border-edge bg-felt/60 p-4 sm:p-5">
+    <h2 class="font-display text-xl font-bold">Record an official draw result</h2>
+    <p class="mt-1 text-sm text-haze">
+      Enter the winning numbers. Every unevaluated prediction for <span id="recGame" class="text-ivory"></span>
+      is compared against them and the matrix updates immediately.
+    </p>
+
+    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+      <div>
+        <label for="recMain" class="mb-1.5 block font-mono text-[11px] uppercase tracking-[.16em] text-haze">
+          Main numbers <span id="recMainHint"></span>
+        </label>
+        <input id="recMain" type="text" inputmode="numeric" placeholder="e.g. 4 17 23 38 45"
+               class="w-full rounded-lg border border-edge bg-pitch px-3 py-2.5 font-mono tabular text-base" />
+      </div>
+      <div>
+        <label for="recExtra" class="mb-1.5 block font-mono text-[11px] uppercase tracking-[.16em] text-haze">
+          <span id="recExtraLabel"></span>
+        </label>
+        <input id="recExtra" type="text" inputmode="numeric" placeholder="e.g. 3 9"
+               class="w-full rounded-lg border border-edge bg-pitch px-3 py-2.5 font-mono tabular text-base" />
+      </div>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+      <label for="recDate" class="font-mono text-[11px] uppercase tracking-[.16em] text-haze">Draw date</label>
+      <input id="recDate" type="date" class="rounded-lg border border-edge bg-pitch px-3 py-2 font-mono text-sm" />
+      <button id="recordBtn" class="rounded-xl bg-mint px-5 py-2.5 font-semibold text-pitch transition hover:brightness-110 active:scale-[.99]">
+        Record result &amp; learn
+      </button>
+    </div>
+    <p id="recError" hidden class="mt-3 text-sm text-ember"></p>
+  </div>
+
+  <!-- Learning progress -->
+  <div class="mt-5 rounded-2xl border border-edge bg-felt/40 p-4 sm:p-5">
+    <div class="flex items-end justify-between">
+      <h3 class="font-mono text-[11px] uppercase tracking-[.18em] text-haze">Learning progress</h3>
+      <p id="progressLabel" class="tabular font-mono text-[11px] text-haze"></p>
+    </div>
+    <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-edge">
+      <div id="progressBar" class="h-full w-0 bg-gradient-to-r from-gold to-mint transition-[width] duration-500"></div>
+    </div>
+    <p id="progressNote" class="mt-2.5 text-sm text-haze"></p>
+  </div>
+
+  <div class="mt-6 mb-3 flex items-center justify-between">
+    <h3 class="font-mono text-[11px] uppercase tracking-[.18em] text-haze">
+      Predictions vs. results <span id="predCount" class="tabular"></span>
+    </h3>
+    <div class="flex gap-4">
+      <button id="exportPredBtn" class="font-mono text-[11px] text-haze underline underline-offset-4 hover:text-gold">Export CSV</button>
+      <button id="clearLearnBtn" class="font-mono text-[11px] text-haze underline underline-offset-4 hover:text-ember">Reset learning</button>
+    </div>
+  </div>
+  <div id="predList" class="overflow-hidden rounded-2xl border border-edge bg-felt/40"></div>
+
+  <div class="mt-4 mb-3 flex items-center justify-between">
+    <h3 class="font-mono text-[11px] uppercase tracking-[.18em] text-haze">Recorded draws</h3>
+  </div>
+  <div id="drawList" class="overflow-hidden rounded-2xl border border-edge bg-felt/40"></div>
+</section>
+
+<!-- ======================= VIEW: STATISTICS ======================= -->
+<section id="view-stats" hidden>
+  <div class="rounded-2xl border border-edge bg-felt/40 p-4 sm:p-5">
+    <div class="flex flex-wrap items-baseline justify-between gap-2">
+      <h2 class="font-display text-xl font-bold">Number frequency heatmap</h2>
+      <p id="statsSource" class="font-mono text-[11px] text-haze"></p>
+    </div>
+    <div id="heatmap" class="mt-4 grid gap-1.5" style="grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));"></div>
+    <div class="mt-3 flex items-center gap-2 font-mono text-[10px] text-haze">
+      <span>cold</span>
+      <span class="h-2 flex-1 rounded-full" style="background:linear-gradient(90deg,#1B2748,#3C4A80,#E9B44C,#E2574C)"></span>
+      <span>hot</span>
+    </div>
+  </div>
+
+  <div class="mt-4 grid gap-4 sm:grid-cols-2">
+    <div class="rounded-2xl border border-edge bg-felt/40 p-4">
+      <h3 class="font-mono text-[11px] uppercase tracking-[.18em] text-haze">Hottest numbers</h3>
+      <div id="hotList" class="mt-3 space-y-2"></div>
+    </div>
+    <div class="rounded-2xl border border-edge bg-felt/40 p-4">
+      <h3 class="font-mono text-[11px] uppercase tracking-[.18em] text-haze">Coldest / most overdue</h3>
+      <div id="coldList" class="mt-3 space-y-2"></div>
+    </div>
+  </div>
+
+  <div class="mt-4 rounded-2xl border border-edge bg-felt/40 p-4">
+    <h3 class="font-mono text-[11px] uppercase tracking-[.18em] text-haze"><span id="extraStatsTitle"></span> frequency</h3>
+    <div id="extraHeat" class="mt-3 grid gap-1.5" style="grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));"></div>
+  </div>
+
+  <div class="mt-4 grid gap-4 sm:grid-cols-2">
+    <div class="rounded-2xl border border-edge bg-felt/40 p-4">
+      <h3 class="font-mono text-[11px] uppercase tracking-[.18em] text-haze">Structural profile</h3>
+      <div id="profileBox" class="mt-3 space-y-2 text-sm"></div>
+    </div>
+    <div class="rounded-2xl border border-edge bg-felt/40 p-4">
+      <h3 class="font-mono text-[11px] uppercase tracking-[.18em] text-haze">Most common pairs</h3>
+      <div id="pairBox" class="mt-3 space-y-2 text-sm"></div>
+    </div>
+  </div>
+
+  <div class="mt-4 rounded-2xl border border-edge bg-felt/40 p-4">
+    <h3 class="font-mono text-[11px] uppercase tracking-[.18em] text-haze">Import your own draw archive</h3>
+    <p class="mt-2 text-sm text-haze">
+      CSV with one draw per line: <code class="font-mono text-ivory">date,n1,n2,n3,n4,n5[,n6],extra1[,extra2]</code>.
+      Imported draws replace the built-in frequencies for this game and feed the pair statistics.
+    </p>
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <input id="csvInput" type="file" accept=".csv,text/csv"
+             class="text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-edge file:px-3 file:py-2 file:text-sm file:text-ivory" />
+      <button id="resetDataBtn" class="font-mono text-[11px] text-haze underline underline-offset-4 hover:text-ember">Back to built-in data</button>
+    </div>
+    <p id="csvNote" hidden class="mt-3 text-sm text-mint"></p>
+  </div>
+</section>
+
+  <footer class="mt-12 border-t border-edge pt-5 font-mono text-[11px] leading-relaxed text-haze">
+    Numbers come from <span class="text-ivory">crypto.getRandomValues</span> with rejection sampling.
+    Frequency data: EuroJackpot 452 draws in the current 5/50 + 2/12 format (from 25 Mar 2022), Lotto 6aus49
+    5,029 draws since 9 Oct 1955 &mdash; sourced from published draw archives and embedded as static counts.
+    <span class="text-ember">No strategy here changes the odds.</span> Play responsibly &middot; 18+.
+  </footer>
+</main>
+
+<div id="toast" hidden class="fixed inset-x-0 bottom-6 z-50 mx-auto w-fit rounded-full border border-edge bg-felt px-5 py-2.5 text-sm shadow-2xl"></div>
+<p id="storageNote" hidden class="fixed inset-x-0 top-0 z-50 bg-ember/90 px-4 py-1.5 text-center font-mono text-[11px] text-pitch"></p>
+<script>
+/* =============================================================================
+   Lotto & EuroJackpot Smart Generator
+   -----------------------------------------------------------------------------
+   Layout of this file:
+     1  Historical data      – embedded draw frequencies
+     2  Randomness           – crypto.getRandomValues + weighted sampling
+     3  Game config
+     4  Storage              – localStorage with an in-memory fallback
+     5  State
+     6  Strategies           – the six selectors the matrix compares
+     7  Monte Carlo          – Web Worker, with a main-thread fallback
+     8  Decision Matrix      – scoring and weight calculation
+     9  Learning             – record a draw, evaluate predictions, update weights
+     10 Rendering
+     11 Events + init
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   1) HISTORICAL DATA
+   Counts of how often each number has been drawn, taken from published draw
+   archives. Arrays are index-aligned: HIST.euro.main[0] is the count for
+   number 1. These are static snapshots — use the CSV import in the Statistics
+   tab to replace them with your own archive.
+--------------------------------------------------------------------------- */
+const HIST = {
+  euro: {
+    // 452 draws, 25 Mar 2022 – Jul 2026 (the current 5/50 + 2/12 format only,
+    // because the Euro pool grew from 10 to 12 balls in March 2022).
+    draws: 452,
+    window: '452 draws · current 5/50 + 2/12 format since 25 Mar 2022',
+    main: [49,50,42,43,36,46,42,50,45,42,59,43,52,44,42,53,57,50,35,54,54,43,53,39,30,44,44,41,46,52,44,40,35,53,51,40,55,39,50,38,50,41,40,39,52,44,46,41,41,41],
+    extra: [75,70,88,65,92,76,76,67,73,75,65,82]
+  },
+  lotto: {
+    // 5,029 draws since 9 Oct 1955. The Superzahl only exists since 7 Dec 1991,
+    // so its 3,143 draws are counted separately.
+    draws: 5029,
+    window: '5,029 draws since 9 Oct 1955 · Superzahl from 3,143 draws since 1991',
+    main: [630,616,635,622,622,676,628,582,629,624,650,588,559,585,597,612,617,607,630,599,574,637,587,606,643,651,622,590,617,600,639,649,645,588,598,621,624,627,608,610,628,624,638,612,550,588,607,621,662],
+    extra: [309,306,305,317,326,332,317,341,297,293]
+  }
+};
+
+/* ---------------------------------------------------------------------------
+   2) RANDOMNESS
+   crypto.getRandomValues is the browser's CSPRNG. Reducing a 32-bit value with
+   `% range` would bias low numbers because 2^32 is not divisible by most
+   ranges, so values in the incomplete tail are rejected and redrawn.
+--------------------------------------------------------------------------- */
+const buf = new Uint32Array(1);
+
+function randomInt(maxExclusive) {
+  if (maxExclusive <= 0) throw new RangeError('maxExclusive must be > 0');
+  const limit = Math.floor(4294967296 / maxExclusive) * maxExclusive;
+  let v;
+  do { crypto.getRandomValues(buf); v = buf[0]; } while (v >= limit);
+  return v % maxExclusive;
+}
+
+/** Uniform float in [0,1) with 32 bits of entropy. */
+function randomFloat() {
+  crypto.getRandomValues(buf);
+  return buf[0] / 4294967296;
+}
+
+/** Uniform pick of `count` unique values (partial Fisher-Yates). */
+function drawUnique(pool, count) {
+  const a = pool.slice(), out = [];
+  for (let i = 0; i < count && a.length; i++) {
+    const j = randomInt(a.length);
+    out.push(a[j]);
+    a[j] = a[a.length - 1];
+    a.pop();
+  }
+  return out;
+}
+
+/**
+ * Pick `count` unique values where each candidate has a relative weight.
+ * Roulette-wheel selection without replacement: draw against the running total,
+ * remove the winner, repeat. Weights must be positive.
+ */
+function weightedUnique(values, weights, count) {
+  const v = values.slice(), w = weights.slice(), out = [];
+  let total = w.reduce((a, b) => a + b, 0);
+  for (let n = 0; n < count && v.length; n++) {
+    let r = randomFloat() * total, i = 0;
+    while (i < v.length - 1 && (r -= w[i]) > 0) i++;
+    out.push(v[i]);
+    total -= w[i];
+    v.splice(i, 1);
+    w.splice(i, 1);
+  }
+  return out;
+}
+
+const range = (from, to) => Array.from({ length: to - from + 1 }, (_, i) => from + i);
+const asc = (a, b) => a - b;
+const sum = arr => arr.reduce((a, b) => a + b, 0);
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+/* ---------------------------------------------------------------------------
+   3) GAME CONFIG
+--------------------------------------------------------------------------- */
+const GAMES = {
+  euro: {
+    label: 'EuroJackpot',
+    main:  { count: 5, min: 1, max: 50, name: 'Main numbers' },
+    extra: { count: 2, min: 1, max: 12, name: 'Euro numbers', ballClass: 'ball--euro', optional: false, weight: 1.5 },
+    minPrizeMain: 1, minPrizeExtra: 2,   // smallest paying tier: 1 main + 2 Euro
+    info: 'Tuesday and Friday · 5 of 50 plus 2 of 12',
+    odds: 'Jackpot (5 + 2): 1 in 139,838,160 · any prize: about 1 in 26 · minimum jackpot €10 million, capped at €120 million.'
+  },
+  lotto: {
+    label: 'Lotto 6 aus 49',
+    main:  { count: 6, min: 1, max: 49, name: 'Main numbers' },
+    extra: { count: 1, min: 0, max: 9,  name: 'Superzahl', ballClass: 'ball--super', optional: true, weight: 1.0 },
+    minPrizeMain: 2, minPrizeExtra: 1,   // smallest paying tier: 2 main + Superzahl
+    info: 'Wednesday and Saturday · 6 of 49 plus one Superzahl',
+    odds: '6 correct + Superzahl: 1 in 139,838,160 · 6 correct: 1 in 13,983,816 · any prize: about 1 in 31.'
+  }
+};
+
+const STRATEGIES = {
+  random:     { label: 'Pure Random',      short: 'Random',  color: '#8B96BC', desc: 'Uniform draw from the full pool. The mathematical baseline everything else is measured against.' },
+  hot:        { label: 'Frequency Weighted', short: 'Hot',   color: '#E2574C', desc: 'Weighted sampling where a number\u2019s chance is proportional to how often it has been drawn, squared to sharpen the bias.' },
+  cold:       { label: 'Cold / Overdue',   short: 'Cold',    color: '#5B8BFF', desc: 'The mirror image: rarely drawn numbers get the highest weight, on the gambler\u2019s-fallacy theory that they are due.' },
+  balanced:   { label: 'Balanced Mix',     short: 'Balance', color: '#5FCFA8', desc: 'Half the numbers from the hot half of the pool, half from the cold half, so the ticket spans both ends.' },
+  pattern:    { label: 'Pair / Pattern',   short: 'Pattern', color: '#C77DFF', desc: 'Builds around number pairs that co-occur most often in the archive, then fills the rest to match the historical odd/even and sum profile.' },
+  montecarlo: { label: 'Monte Carlo',      short: 'Monte',   color: '#E9B44C', desc: 'Simulates thousands of frequency-weighted draws and keeps the numbers that surface most often across the whole simulation.' },
+  adaptive:   { label: 'Adaptive (Learned)', short: 'Adaptive', color: '#F3EDE1', desc: 'Blends every strategy\u2019s number-level preferences using the weights the decision matrix has learned so far.' }
+};
+
+/** The six strategies the matrix ranks. Adaptive is the ensemble of them. */
+const RANKED = ['random', 'hot', 'cold', 'balanced', 'pattern', 'montecarlo'];
+const PRED_LIMIT = 200;      // predictions kept in storage
+const LEARN_TARGET = 60;     // evaluated predictions for a "trained" progress bar
+const SHRINK_K = 25;         // sample size at which a strategy gets half its raw edge
+
+/* ---------------------------------------------------------------------------
+   4) STORAGE
+   Some embedded/preview contexts block localStorage, so every call is guarded
+   and silently degrades to memory for the session.
+--------------------------------------------------------------------------- */
+const KEY = 'lotto-smart-v1';
+let storageOK = true, memoryFallback = null;
+
+const store = {
+  load() {
+    try { const raw = localStorage.getItem(KEY); return raw ? JSON.parse(raw) : null; }
+    catch (e) { storageOK = false; return memoryFallback; }
+  },
+  save(data) {
+    memoryFallback = data;
+    try { localStorage.setItem(KEY, JSON.stringify(data)); }
+    catch (e) { storageOK = false; }
+  }
+};
+
+/* ---------------------------------------------------------------------------
+   5) STATE
+--------------------------------------------------------------------------- */
+function emptyStat() {
+  return { predictions: 0, evaluated: 0, valueTotal: 0, mainTotal: 0, extraTotal: 0, prizes: 0, tiers: {} };
+}
+function emptyMatrix() {
+  const m = {};
+  RANKED.concat(['adaptive']).forEach(s => { m[s] = emptyStat(); });
+  return m;
+}
+
+const state = {
+  view: 'generate',
+  game: 'euro',
+  mode: 'random',
+  count: 1,
+  superzahl: true,
+  mcIterations: 100000,
+  tickets: [],                                   // currently displayed
+  predictions: [],                               // every generated ticket, newest first
+  draws: [],                                     // recorded official results
+  archive: { euro: null, lotto: null },          // imported draw lists (raw combinations)
+  matrix: { euro: emptyMatrix(), lotto: emptyMatrix() },
+  sortKey: 'weight',
+  sortDir: -1
+};
+
+(function restore() {
+  const s = store.load();
+  if (!s) return;
+  if (s.game && GAMES[s.game]) state.game = s.game;
+  if (s.mode && STRATEGIES[s.mode]) state.mode = s.mode;
+  if (Number.isInteger(s.count)) state.count = clamp(s.count, 1, 10);
+  if (typeof s.superzahl === 'boolean') state.superzahl = s.superzahl;
+  if (Number.isInteger(s.mcIterations)) state.mcIterations = clamp(s.mcIterations, 10000, 1000000);
+  if (Array.isArray(s.predictions)) state.predictions = s.predictions.slice(0, PRED_LIMIT);
+  if (Array.isArray(s.draws)) state.draws = s.draws;
+  if (s.archive) state.archive = { euro: s.archive.euro || null, lotto: s.archive.lotto || null };
+  if (s.matrix) {
+    ['euro', 'lotto'].forEach(g => {
+      if (!s.matrix[g]) return;
+      RANKED.concat(['adaptive']).forEach(k => {
+        if (s.matrix[g][k]) state.matrix[g][k] = Object.assign(emptyStat(), s.matrix[g][k]);
+      });
+    });
+  }
+})();
+
+const persist = () => store.save({
+  game: state.game, mode: state.mode, count: state.count, superzahl: state.superzahl,
+  mcIterations: state.mcIterations, predictions: state.predictions, draws: state.draws,
+  archive: state.archive, matrix: state.matrix
+});
+
+/* ---------------------------------------------------------------------------
+   FREQUENCY ACCESS
+   Either the embedded snapshot or, once a CSV archive is imported, counts
+   derived from that archive.
+--------------------------------------------------------------------------- */
+function freqs(gameKey) {
+  const g = GAMES[gameKey], arc = state.archive[gameKey];
+  if (!arc || !arc.rows || !arc.rows.length) {
+    return { main: HIST[gameKey].main, extra: HIST[gameKey].extra, draws: HIST[gameKey].draws, window: HIST[gameKey].window, imported: false };
+  }
+  const main = new Array(g.main.max - g.main.min + 1).fill(0);
+  const extra = new Array(g.extra.max - g.extra.min + 1).fill(0);
+  arc.rows.forEach(r => {
+    r.main.forEach(n => { if (n >= g.main.min && n <= g.main.max) main[n - g.main.min]++; });
+    r.extra.forEach(n => { if (n >= g.extra.min && n <= g.extra.max) extra[n - g.extra.min]++; });
+  });
+  return { main, extra, draws: arc.rows.length, window: arc.rows.length + ' imported draws', imported: true };
+}
+
+/** Pair co-occurrence counts, built from imported archive + recorded draws. */
+function pairStats(gameKey) {
+  const rows = [];
+  const arc = state.archive[gameKey];
+  if (arc && arc.rows) rows.push(...arc.rows);
+  state.draws.filter(d => d.game === gameKey).forEach(d => rows.push({ main: d.main, extra: d.extra }));
+  const counts = new Map();
+  rows.forEach(r => {
+    const m = r.main.slice().sort(asc);
+    for (let i = 0; i < m.length; i++)
+      for (let j = i + 1; j < m.length; j++) {
+        const k = m[i] + '-' + m[j];
+        counts.set(k, (counts.get(k) || 0) + 1);
+      }
+  });
+  const list = [...counts.entries()]
+    .map(([k, c]) => ({ pair: k.split('-').map(Number), count: c }))
+    .sort((a, b) => b.count - a.count);
+  return { list, rows: rows.length };
+}
+
+/* ---------------------------------------------------------------------------
+   6) STRATEGIES
+   Each strategy exposes a score vector over the main pool (used by the
+   adaptive ensemble) and a pick() that produces an actual set of numbers.
+--------------------------------------------------------------------------- */
+
+/** Normalise an array of positive numbers so it sums to 1. */
+function normalise(v) {
+  const t = sum(v) || 1;
+  return v.map(x => x / t);
+}
+
+/** Score vector per strategy: relative preference for each main number. */
+const TEMPERATURE = 1.0;   // lower = the frequency bias bites harder
+
+/** Standardised frequencies (z-scores), so both games behave the same way. */
+function zScores(gameKey) {
+  const g = GAMES[gameKey], f = freqs(gameKey);
+  const fr = range(g.main.min, g.main.max).map((n, i) => f.main[i] || 0);
+  const mean = sum(fr) / fr.length;
+  const sd = Math.sqrt(sum(fr.map(x => (x - mean) ** 2)) / fr.length) || 1;
+  return fr.map(x => (x - mean) / sd);
+}
+
+function scoreVector(strategyKey, gameKey) {
+  const g = GAMES[gameKey];
+  const pool = range(g.main.min, g.main.max);
+  const z = zScores(gameKey);
+
+  switch (strategyKey) {
+    case 'hot':
+      // Softmax over z-scores: a number one standard deviation above average is
+      // e ≈ 2.7 times more likely than an average one, and nothing hits zero.
+      return normalise(z.map(x => Math.exp(x / TEMPERATURE)));
+    case 'cold':
+      return normalise(z.map(x => Math.exp(-x / TEMPERATURE)));
+    case 'balanced': {
+      const hot = normalise(z.map(x => Math.exp(x / TEMPERATURE)));
+      const cold = normalise(z.map(x => Math.exp(-x / TEMPERATURE)));
+      return normalise(hot.map((h, i) => h + cold[i]));
+    }
+    case 'pattern': {
+      // Preference = how often a number takes part in the archive's frequent pairs.
+      const ps = pairStats(gameKey);
+      if (!ps.list.length) return normalise(pool.map(() => 1));
+      const deg = new Array(pool.length).fill(0);
+      ps.list.slice(0, 120).forEach(({ pair, count }) => {
+        pair.forEach(n => { const i = n - g.main.min; if (deg[i] != null) deg[i] += count; });
+      });
+      return normalise(deg.map(d => d + 1));
+    }
+    case 'montecarlo':
+      // The simulation samples from the same frequency model the Hot strategy uses.
+      return normalise(z.map(x => Math.exp(x / TEMPERATURE)));
+    case 'random':
+    default:
+      return normalise(pool.map(() => 1));
+  }
+}
+
+/** Expected sum and its standard deviation for a uniform k-of-N draw. */
+function sumProfile(g) {
+  const N = g.main.max - g.main.min + 1, k = g.main.count;
+  const mean = k * (g.main.min + g.main.max) / 2;
+  const varOne = (N * N - 1) / 12;
+  const sd = Math.sqrt(k * varOne * (N - k) / (N - 1));
+  return { mean, sd };
+}
+
+/** Draw the extra numbers (Euro numbers / Superzahl) for a strategy. */
+function pickExtra(strategyKey, gameKey) {
+  const g = GAMES[gameKey], f = freqs(gameKey);
+  const pool = range(g.extra.min, g.extra.max);
+  if (strategyKey === 'random' || strategyKey === 'pattern') return drawUnique(pool, g.extra.count).sort(asc);
+  const fr = pool.map((n, i) => (f.extra[i] || 0) + 1);
+  const max = Math.max(...fr), min = Math.min(...fr);
+  const w = (strategyKey === 'cold') ? fr.map(x => max + min - x + 1) : fr.map(x => x);
+  return weightedUnique(pool, w, g.extra.count).sort(asc);
+}
+
+/** Main-number selection per strategy. mcCounts is supplied for Monte Carlo. */
+function pickMain(strategyKey, gameKey, mcCounts) {
+  const g = GAMES[gameKey];
+  const pool = range(g.main.min, g.main.max);
+  const k = g.main.count;
+
+  if (strategyKey === 'random') return drawUnique(pool, k);
+
+  if (strategyKey === 'balanced') {
+    // Split the pool at the median frequency, take half the ticket from each side.
+    const f = freqs(gameKey);
+    const ordered = pool.slice().sort((a, b) => f.main[b - g.main.min] - f.main[a - g.main.min]);
+    const half = Math.ceil(ordered.length / 2);
+    const hotHalf = ordered.slice(0, half), coldHalf = ordered.slice(half);
+    const nHot = Math.ceil(k / 2), nCold = k - nHot;
+    const w = arr => arr.map(n => f.main[n - g.main.min] + 1);
+    return [...weightedUnique(hotHalf, w(hotHalf), nHot),
+            ...weightedUnique(coldHalf, w(coldHalf).map(x => 1 / x), nCold)];
+  }
+
+  if (strategyKey === 'pattern') {
+    // Seed with a frequent pair, then fill so the ticket matches the historical
+    // odd/even split and lands inside one standard deviation of the usual sum.
+    const ps = pairStats(gameKey);
+    const { mean, sd } = sumProfile(g);
+    const seed = ps.list.length
+      ? ps.list[randomInt(Math.min(25, ps.list.length))].pair.slice()
+      : drawUnique(pool, 2);
+    const wantOdd = Math.round(k * 0.55);          // 3-of-5 and 3-of-6 are the modal splits
+    for (let attempt = 0; attempt < 400; attempt++) {
+      const rest = drawUnique(pool.filter(n => !seed.includes(n)), k - seed.length);
+      const cand = [...seed, ...rest];
+      const odd = cand.filter(n => n % 2 === 1).length;
+      const s = sum(cand);
+      if (Math.abs(odd - wantOdd) <= 1 && Math.abs(s - mean) <= sd) return cand;
+    }
+    return drawUnique(pool, k);                    // give up rather than loop forever
+  }
+
+  if (strategyKey === 'montecarlo' && mcCounts) {
+    // Shortlist the numbers that surfaced most often in the simulation, then
+    // sample within that shortlist so repeated runs are not identical.
+    const ranked = pool.slice().sort((a, b) => mcCounts[b - g.main.min] - mcCounts[a - g.main.min]);
+    const shortlist = ranked.slice(0, Math.min(pool.length, k * 3));
+    const w = shortlist.map(n => mcCounts[n - g.main.min] + 1);
+    return weightedUnique(shortlist, w, k);
+  }
+
+  if (strategyKey === 'adaptive') {
+    // Weighted ensemble: blend every ranked strategy's score vector using the
+    // learned matrix weights, then sample from the blended distribution.
+    const p = ensembleWeights(gameKey);
+    const blended = new Array(pool.length).fill(0);
+    RANKED.forEach(s => {
+      const v = scoreVector(s, gameKey);
+      v.forEach((x, i) => { blended[i] += p[s] * x; });
+    });
+    return weightedUnique(pool, blended.map(x => x + 1e-9), k);
+  }
+
+  // hot / cold / montecarlo-without-counts all reduce to weighted sampling.
+  const v = scoreVector(strategyKey, gameKey);
+  return weightedUnique(pool, v.map(x => x + 1e-9), k);
+}
+
+/* ---------------------------------------------------------------------------
+   7) MONTE CARLO
+   Simulates `iterations` frequency-weighted draws and counts how often each
+   number appears. Runs in a Web Worker built from a Blob so the file stays
+   self-contained; falls back to chunked main-thread work if workers are
+   unavailable (for example when opened straight from file:// in some browsers).
+--------------------------------------------------------------------------- */
+const WORKER_SRC = `
+self.onmessage = function (e) {
+  var w = e.data.weights, k = e.data.k, iters = e.data.iterations;
+  var n = w.length, cum = new Float64Array(n), acc = 0, i, j;
+  for (i = 0; i < n; i++) { acc += w[i]; cum[i] = acc; }
+  var counts = new Uint32Array(n);
+  var rnd = new Uint32Array(4096), rp = rnd.length;
+  function next() {
+    if (rp >= rnd.length) { self.crypto.getRandomValues(rnd); rp = 0; }
+    return rnd[rp++] / 4294967296;
+  }
+  var picked = new Uint8Array(n);
+  var step = Math.max(1, Math.floor(iters / 20));
+  for (i = 0; i < iters; i++) {
+    picked.fill(0);
+    var got = 0, guard = 0;
+    while (got < k && guard < k * 40) {
+      guard++;
+      var r = next() * acc, lo = 0, hi = n - 1, mid;
+      while (lo < hi) { mid = (lo + hi) >> 1; if (cum[mid] < r) lo = mid + 1; else hi = mid; }
+      if (!picked[lo]) { picked[lo] = 1; counts[lo]++; got++; }
+    }
+    if (i % step === 0) self.postMessage({ progress: i / iters });
+  }
+  self.postMessage({ done: true, counts: counts });
+};`;
+
+let workerURL = null;
+function getWorker() {
+  try {
+    if (!workerURL) workerURL = URL.createObjectURL(new Blob([WORKER_SRC], { type: 'text/javascript' }));
+    return new Worker(workerURL);
+  } catch (e) { return null; }
+}
+
+function runMonteCarlo(gameKey, iterations, onProgress) {
+  const g = GAMES[gameKey];
+  const weights = scoreVector('montecarlo', gameKey).map(x => x + 1e-9);
+  const k = g.main.count;
+
+  return new Promise(resolve => {
+    const worker = getWorker();
+    if (worker) {
+      worker.onmessage = ev => {
+        if (ev.data.progress != null) return onProgress(ev.data.progress);
+        worker.terminate();
+        resolve(Array.from(ev.data.counts));
+      };
+      worker.onerror = () => { worker.terminate(); resolve(mainThreadMC(weights, k, iterations, onProgress)); };
+      worker.postMessage({ weights, k, iterations });
+    } else {
+      resolve(mainThreadMC(weights, k, iterations, onProgress));
+    }
+  });
+}
+
+/** Fallback: same simulation, chunked so the UI keeps breathing. */
+function mainThreadMC(weights, k, iterations, onProgress) {
+  const n = weights.length, cum = new Float64Array(n);
+  let acc = 0;
+  for (let i = 0; i < n; i++) { acc += weights[i]; cum[i] = acc; }
+  const counts = new Uint32Array(n);
+  let done = 0;
+  const CHUNK = 5000;
+
+  return new Promise(resolve => {
+    (function step() {
+      const end = Math.min(iterations, done + CHUNK);
+      for (; done < end; done++) {
+        const picked = new Set();
+        let guard = 0;
+        while (picked.size < k && guard++ < k * 40) {
+          const r = randomFloat() * acc;
+          let lo = 0, hi = n - 1;
+          while (lo < hi) { const mid = (lo + hi) >> 1; if (cum[mid] < r) lo = mid + 1; else hi = mid; }
+          if (!picked.has(lo)) { picked.add(lo); counts[lo]++; }
+        }
+      }
+      onProgress(done / iterations);
+      if (done < iterations) setTimeout(step, 0);
+      else resolve(Array.from(counts));
+    })();
+  });
+}
+
+/* ---------------------------------------------------------------------------
+   8) DECISION MATRIX
+--------------------------------------------------------------------------- */
+
+/** Value of one evaluated prediction: main hits plus weighted extra hits. */
+function ticketValue(gameKey, mainMatched, extraMatched) {
+  return mainMatched + GAMES[gameKey].extra.weight * extraMatched;
+}
+
+/** What pure chance delivers on average — the yardstick for every strategy. */
+function baselineValue(gameKey) {
+  const g = GAMES[gameKey];
+  const mainPool = g.main.max - g.main.min + 1;
+  const extraPool = g.extra.max - g.extra.min + 1;
+  const mainExp = g.main.count * g.main.count / mainPool;
+  const extraExp = g.extra.weight * g.extra.count * g.extra.count / extraPool;
+  return mainExp + extraExp;
+}
+
+/** Does this combination reach the lowest paying tier? */
+const isPrize = {
+  euro:  (m, e) => m >= 3 || (m >= 2 && e >= 1) || (m >= 1 && e >= 2),
+  lotto: (m, e) => m >= 3 || (m >= 2 && e >= 1)
+};
+
+/**
+ * Derived numbers for one strategy.
+ *   edge   = observed average value / value expected from chance
+ *   weight = 50 at chance level, pulled toward 50 while the sample is small
+ */
+function strategyScore(gameKey, key) {
+  const st = state.matrix[gameKey][key] || emptyStat();
+  const base = baselineValue(gameKey);
+  const avgValue = st.evaluated ? st.valueTotal / st.evaluated : base;
+  const avgMatched = st.evaluated ? st.mainTotal / st.evaluated : 0;
+  const edge = avgValue / base;
+  const confidence = st.evaluated / (st.evaluated + SHRINK_K);   // 0 -> 1
+  const shrunk = 1 + (edge - 1) * confidence;
+  const weight = clamp(Math.round(50 * shrunk), 5, 100);
+  const prizeRate = st.evaluated ? st.prizes / st.evaluated : 0;
+  return { key, label: STRATEGIES[key].label, color: STRATEGIES[key].color,
+           predictions: st.predictions, evaluated: st.evaluated,
+           avgMatched, avgValue, edge, confidence, weight, prizeRate, tiers: st.tiers };
+}
+
+/** Normalised ensemble probabilities used by Adaptive mode. */
+function ensembleWeights(gameKey) {
+  const scores = RANKED.map(k => strategyScore(gameKey, k));
+  // Weight^2 sharpens the ensemble once real differences appear, while an
+  // untrained matrix (every weight 50) still comes out as an even split.
+  const raw = scores.map(s => Math.pow(s.weight, 2));
+  const total = sum(raw);
+  const out = {};
+  scores.forEach((s, i) => { out[s.key] = raw[i] / total; });
+  return out;
+}
+
+/* ---------------------------------------------------------------------------
+   9) LEARNING
+--------------------------------------------------------------------------- */
+
+/** Record a generated ticket as a prediction and bump the counter. */
+function logPrediction(ticket) {
+  state.predictions.unshift(ticket);
+  state.predictions = state.predictions.slice(0, PRED_LIMIT);
+  state.matrix[ticket.game][ticket.strategy].predictions++;
+}
+
+/**
+ * Compare every not-yet-evaluated prediction for this game against a recorded
+ * draw, then fold the outcome into the matrix. Predictions are evaluated once.
+ */
+function applyDraw(draw) {
+  const g = GAMES[draw.game];
+  const mainSet = new Set(draw.main), extraSet = new Set(draw.extra);
+  let touched = 0;
+
+  state.predictions.forEach(p => {
+    if (p.game !== draw.game || p.evaluated) return;
+    if (p.at > draw.at + 86400000) return;          // ignore tickets made after the draw
+
+    const m = p.main.filter(n => mainSet.has(n)).length;
+    const e = p.extra.filter(n => extraSet.has(n)).length;
+    const st = state.matrix[p.game][p.strategy];
+    const tier = m + '+' + e;
+
+    st.evaluated++;
+    st.valueTotal += ticketValue(p.game, m, e);
+    st.mainTotal += m;
+    st.extraTotal += e;
+    st.tiers[tier] = (st.tiers[tier] || 0) + 1;
+    if (isPrize[p.game](m, e)) st.prizes++;
+
+    p.evaluated = true;
+    p.result = { mainMatched: m, extraMatched: e, drawId: draw.id, prize: isPrize[p.game](m, e) };
+    touched++;
+  });
+
+  return touched;
+}
+
+/* ---------------------------------------------------------------------------
+   10) RENDERING
+--------------------------------------------------------------------------- */
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, '0');
+const pct = x => (x * 100).toFixed(0) + '%';
+const fmt = n => n.toLocaleString('en-US');
+const timeOf = ts => new Date(ts).toLocaleString(undefined, { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+const dateOf = ts => new Date(ts).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' });
+let justUpdated = new Set();
+
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg; t.hidden = false;
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { t.hidden = true; }, 2200);
+}
+
+/* ---- Navigation ---------------------------------------------------------- */
+function renderNav() {
+  document.querySelectorAll('.view-tab').forEach(b => {
+    const on = b.dataset.view === state.view;
+    b.setAttribute('aria-selected', String(on));
+    b.className = 'view-tab whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-semibold transition ' +
+      (on ? 'bg-gold text-pitch' : 'text-haze hover:text-ivory');
+  });
+  ['generate', 'matrix', 'learning', 'stats'].forEach(v => { $('view-' + v).hidden = state.view !== v; });
+
+  document.querySelectorAll('.game-tab').forEach(b => {
+    const on = b.dataset.game === state.game;
+    b.setAttribute('aria-selected', String(on));
+    b.className = 'game-tab rounded-full px-4 py-1.5 text-sm font-semibold transition ' +
+      (on ? 'bg-gold text-pitch' : 'text-haze hover:text-ivory');
+  });
+  const g = GAMES[state.game];
+  $('gameInfo').textContent = g.info;
+  $('odds').textContent = g.odds;
+  $('superWrap').hidden = !g.extra.optional;
+}
+
+/* ---- Mode picker --------------------------------------------------------- */
+function renderModes() {
+  const p = ensembleWeights(state.game);
+  $('modeGrid').innerHTML = Object.keys(STRATEGIES).map(key => {
+    const s = STRATEGIES[key], on = state.mode === key;
+    const sc = key === 'adaptive' ? null : strategyScore(state.game, key);
+    const meta = key === 'adaptive'
+      ? 'blend: ' + RANKED.map(k => STRATEGIES[k].short + ' ' + pct(p[k])).slice(0, 3).join(' · ')
+      : 'weight ' + sc.weight + ' · ' + sc.evaluated + ' evaluated';
+    return `
+      <button data-mode="${key}"
+        class="mode-card rounded-xl border p-3 text-left transition ${on ? 'border-gold bg-gold/10' : 'border-edge bg-pitch/40 hover:border-haze'}">
+        <div class="flex items-center gap-2">
+          <span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background:${s.color}"></span>
+          <span class="text-sm font-semibold">${s.label}</span>
+        </div>
+        <p class="mt-1.5 text-[12px] leading-snug text-haze">${s.desc}</p>
+        <p class="mt-2 font-mono text-[10px] uppercase tracking-wider ${on ? 'text-gold' : 'text-haze/70'}">${meta}</p>
+      </button>`;
+  }).join('');
+  $('mcWrap').hidden = state.mode !== 'montecarlo';
+}
+
+/* ---- Tickets ------------------------------------------------------------- */
+function ballHTML(v, kind, i, size) {
+  return `<span class="ball ${kind} ${size} drop" style="--i:${i}">${pad(v)}</span>`;
+}
+
+function ticketHTML(t, index) {
+  const g = GAMES[t.game], s = STRATEGIES[t.strategy];
+  const big = 'h-12 w-12 text-lg sm:h-14 sm:w-14 sm:text-xl';
+  const main = t.main.map((n, i) => ballHTML(n, 'ball--main', i, big)).join('');
+  const extra = t.extra.map((n, i) => ballHTML(n, g.extra.ballClass, t.main.length + i, big)).join('');
+  return `
+    <article class="stub rounded-2xl border border-edge bg-felt/70 p-4 sm:p-5">
+      <div class="flex items-start justify-between gap-3">
+        <p class="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[.16em] text-haze">
+          <span class="h-2 w-2 rounded-full" style="background:${s.color}"></span>
+          Ticket ${index + 1} <span class="text-edge">/</span> <span class="text-ivory">${s.label}</span>
+        </p>
+        <div class="flex shrink-0 gap-3">
+          <button data-action="regen" data-idx="${index}" class="font-mono text-[11px] text-haze underline underline-offset-4 hover:text-gold">Redraw</button>
+          <button data-action="copy" data-idx="${index}" class="font-mono text-[11px] text-haze underline underline-offset-4 hover:text-gold">Copy</button>
+        </div>
+      </div>
+      <div class="mt-4 flex flex-wrap items-center gap-2">
+        ${main}${t.extra.length ? '<span class="mx-1 h-8 w-px shrink-0 bg-edge sm:mx-2"></span>' : ''}${extra}
+      </div>
+    </article>`;
+}
+
+function renderTickets() {
+  const has = state.tickets.length > 0;
+  $('emptyState').hidden = has;
+  $('ticketActions').hidden = !has;
+  $('tickets').innerHTML = state.tickets.map(ticketHTML).join('');
+}
+
+/* ---- Decision matrix ----------------------------------------------------- */
+function tierSummary(tiers) {
+  const keys = Object.keys(tiers).sort((a, b) => {
+    const [am, ae] = a.split('+').map(Number), [bm, be] = b.split('+').map(Number);
+    return (bm - am) || (be - ae);
+  }).slice(0, 4);
+  if (!keys.length) return '<span class="text-haze/60">—</span>';
+  return keys.map(k => `<span class="mr-1.5 rounded bg-edge px-1.5 py-0.5 font-mono text-[10px]">${k}<span class="text-haze"> ×${tiers[k]}</span></span>`).join('');
+}
+
+function renderMatrix() {
+  const rows = RANKED.concat(['adaptive']).map(k => strategyScore(state.game, k));
+  const dir = state.sortDir;
+  rows.sort((a, b) => {
+    const x = a[state.sortKey], y = b[state.sortKey];
+    return typeof x === 'string' ? dir * x.localeCompare(y) : dir * (x - y);
+  });
+
+  $('matrixBody').innerHTML = rows.map(r => `
+    <tr class="border-b border-edge/60 last:border-0 ${justUpdated.has(r.key) ? 'flash' : ''}">
+      <td class="px-4 py-3">
+        <span class="flex items-center gap-2 font-semibold">
+          <span class="h-2.5 w-2.5 rounded-full" style="background:${r.color}"></span>${r.label}
+        </span>
+      </td>
+      <td class="tabular px-3 py-3">${r.predictions}</td>
+      <td class="tabular px-3 py-3">${r.evaluated}</td>
+      <td class="tabular px-3 py-3">${r.evaluated ? r.avgMatched.toFixed(2) : '—'}</td>
+      <td class="px-3 py-3">${tierSummary(r.tiers)}</td>
+      <td class="tabular px-3 py-3">${r.evaluated ? pct(r.prizeRate) : '—'}</td>
+      <td class="tabular px-3 py-3 ${r.edge > 1.02 ? 'text-mint' : r.edge < 0.98 ? 'text-ember' : ''}">${r.evaluated ? r.edge.toFixed(3) : '—'}</td>
+      <td class="px-3 py-3">
+        <div class="flex items-center gap-2">
+          <div class="h-1.5 w-16 overflow-hidden rounded-full bg-edge">
+            <div class="h-full rounded-full" style="width:${r.weight}%;background:${r.color}"></div>
+          </div>
+          <span class="tabular font-mono text-xs">${r.weight}</span>
+        </div>
+      </td>
+    </tr>`).join('');
+
+  const p = ensembleWeights(state.game);
+  $('matrixCards').innerHTML = RANKED.map(k => {
+    const r = strategyScore(state.game, k);
+    return `
+      <div class="rounded-2xl border border-edge bg-felt/50 p-4">
+        <div class="flex items-center justify-between">
+          <span class="flex items-center gap-2 text-sm font-semibold">
+            <span class="h-2.5 w-2.5 rounded-full" style="background:${r.color}"></span>${r.label}
+          </span>
+          <span class="tabular font-mono text-sm text-gold">${pct(p[k])}</span>
+        </div>
+        <p class="mt-1 font-mono text-[11px] text-haze">share of the adaptive ensemble</p>
+        <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-edge">
+          <div class="h-full rounded-full transition-[width] duration-500" style="width:${(p[k] * 100).toFixed(1)}%;background:${r.color}"></div>
+        </div>
+        <p class="mt-3 font-mono text-[11px] text-haze">
+          confidence ${pct(r.confidence)} · ${r.evaluated} of ${SHRINK_K} evaluations needed for half weight
+        </p>
+      </div>`;
+  }).join('');
+  justUpdated = new Set();
+}
+
+/* ---- Learning ------------------------------------------------------------ */
+function renderLearning() {
+  const g = GAMES[state.game];
+  $('recGame').textContent = g.label;
+  $('recMainHint').textContent = `(${g.main.count} numbers, ${g.main.min}\u2013${g.main.max})`;
+  $('recExtraLabel').textContent = g.extra.optional
+    ? `${g.extra.name} (${g.extra.min}\u2013${g.extra.max})`
+    : `${g.extra.name} (${g.extra.count} of ${g.extra.min}\u2013${g.extra.max})`;
+
+  const evaluated = RANKED.concat(['adaptive']).reduce((a, k) => a + state.matrix[state.game][k].evaluated, 0);
+  const p = Math.min(1, evaluated / LEARN_TARGET);
+  $('progressBar').style.width = (p * 100).toFixed(1) + '%';
+  $('progressLabel').textContent = `${evaluated} / ${LEARN_TARGET} evaluated`;
+  $('progressNote').textContent = evaluated === 0
+    ? 'No predictions have met a real draw yet. Generate tickets, then come back after the next draw and record the winning numbers.'
+    : p < 1
+      ? 'Weights are still shrunk hard toward the baseline of 50. Differences you see now are almost certainly noise.'
+      : 'Enough evaluations for the weights to move freely — though with a fair lottery they will keep wandering around 50 forever.';
+
+  const preds = state.predictions.filter(x => x.game === state.game);
+  $('predCount').textContent = preds.length ? `${preds.length}` : '';
+  $('predList').innerHTML = preds.length ? preds.slice(0, 40).map((t, i) => {
+    const s = STRATEGIES[t.strategy];
+    const hit = t.result;
+    const balls = t.main.map(n => {
+      const on = hit && state.draws.find(d => d.id === hit.drawId)?.main.includes(n);
+      return `<span class="ball ${on ? 'ball--hit' : 'ball--main'} h-7 w-7 text-[11px]">${pad(n)}</span>`;
+    }).join('');
+    const status = hit
+      ? `<span class="${hit.prize ? 'text-mint' : 'text-haze'}">${hit.mainMatched} main${t.extra.length ? ' + ' + hit.extraMatched : ''}${hit.prize ? ' · prize tier' : ''}</span>`
+      : '<span class="text-haze/60">awaiting result</span>';
+    return `
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 ${i ? 'perf' : ''}">
+        <span class="flex w-28 shrink-0 items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-haze">
+          <span class="h-1.5 w-1.5 rounded-full" style="background:${s.color}"></span>${s.short}
+        </span>
+        <div class="flex flex-wrap items-center gap-1.5">${balls}</div>
+        <span class="ml-auto text-right font-mono text-[10px] leading-tight">
+          ${status}<br /><span class="text-haze/60">${timeOf(t.at)}</span>
+        </span>
+      </div>`;
+  }).join('') : `<p class="px-5 py-8 text-center text-sm text-haze">No predictions for ${g.label} yet.</p>`;
+
+  const draws = state.draws.filter(d => d.game === state.game);
+  $('drawList').innerHTML = draws.length ? draws.map((d, i) => {
+    const main = d.main.map(n => `<span class="ball ball--hit h-7 w-7 text-[11px]">${pad(n)}</span>`).join('');
+    const extra = d.extra.map(n => `<span class="ball ${g.extra.ballClass} h-7 w-7 text-[11px]">${pad(n)}</span>`).join('');
+    return `
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 ${i ? 'perf' : ''}">
+        <span class="w-24 shrink-0 font-mono text-[10px] text-haze">${dateOf(d.at)}</span>
+        <div class="flex flex-wrap items-center gap-1.5">${main}${extra ? '<span class="mx-1 h-5 w-px bg-edge"></span>' + extra : ''}</div>
+        <span class="ml-auto font-mono text-[10px] text-haze">${d.matched} evaluated</span>
+      </div>`;
+  }).join('') : '<p class="px-5 py-8 text-center text-sm text-haze">No official results recorded yet.</p>';
+}
+
+/* ---- Statistics ---------------------------------------------------------- */
+function heatColor(t) {
+  // t in [0,1] across four stops: deep blue -> indigo -> gold -> red
+  const stops = [[27,39,72],[60,74,128],[233,180,76],[226,87,76]];
+  const x = clamp(t, 0, 1) * (stops.length - 1);
+  const i = Math.min(stops.length - 2, Math.floor(x)), f = x - i;
+  const c = stops[i].map((v, j) => Math.round(v + (stops[i + 1][j] - v) * f));
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+
+function heatCells(values, min, labels) {
+  const lo = Math.min(...values), hi = Math.max(...values);
+  return values.map((v, i) => {
+    const t = hi === lo ? 0.5 : (v - lo) / (hi - lo);
+    const dark = t > 0.55;
+    return `<div class="heat rounded-lg px-1 py-2 text-center" style="background:${heatColor(t)}"
+              title="${labels ? labels[i] : min + i}: drawn ${fmt(v)} times">
+              <div class="tabular text-sm font-semibold ${dark ? 'text-pitch' : 'text-ivory'}">${min + i}</div>
+              <div class="tabular font-mono text-[9px] ${dark ? 'text-pitch/70' : 'text-haze'}">${fmt(v)}</div>
+            </div>`;
+  }).join('');
+}
+
+function renderStats() {
+  const g = GAMES[state.game], f = freqs(state.game);
+  $('statsSource').textContent = f.window + (f.imported ? ' · imported' : ' · built-in');
+  $('heatmap').innerHTML = heatCells(f.main, g.main.min);
+  $('extraStatsTitle').textContent = g.extra.name;
+  $('extraHeat').innerHTML = heatCells(f.extra, g.extra.min);
+
+  const pool = range(g.main.min, g.main.max);
+  const ranked = pool.map((n, i) => ({ n, c: f.main[i] })).sort((a, b) => b.c - a.c);
+  const bar = (row, best) => `
+    <div class="flex items-center gap-2.5">
+      <span class="ball ball--main h-7 w-7 shrink-0 text-[11px]">${pad(row.n)}</span>
+      <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-edge">
+        <div class="h-full rounded-full bg-gold" style="width:${(row.c / best * 100).toFixed(0)}%"></div>
+      </div>
+      <span class="tabular w-12 text-right font-mono text-[11px] text-haze">${fmt(row.c)}</span>
+    </div>`;
+  const best = ranked[0].c;
+  $('hotList').innerHTML = ranked.slice(0, 8).map(r => bar(r, best)).join('');
+  $('coldList').innerHTML = ranked.slice(-8).reverse().map(r => bar(r, best)).join('');
+
+  const { mean, sd } = sumProfile(g);
+  const expected = f.draws * g.main.count / pool.length;
+  $('profileBox').innerHTML = `
+    <p class="text-haze">Draws in the data set: <span class="tabular text-ivory">${fmt(f.draws)}</span></p>
+    <p class="text-haze">Expected hits per number: <span class="tabular text-ivory">${expected.toFixed(1)}</span>
+       · observed spread <span class="tabular text-ivory">${fmt(Math.min(...f.main))}–${fmt(Math.max(...f.main))}</span></p>
+    <p class="text-haze">Typical ticket sum: <span class="tabular text-ivory">${mean.toFixed(0)} ± ${sd.toFixed(0)}</span></p>
+    <p class="text-haze">Modal odd/even split: <span class="text-ivory">${Math.round(g.main.count * 0.55)} odd / ${g.main.count - Math.round(g.main.count * 0.55)} even</span></p>
+    <p class="pt-1 text-[12px] leading-snug text-haze/80">
+      The observed spread looks dramatic but sits inside normal sampling noise for this many draws —
+      that is exactly what a fair drum produces.
+    </p>`;
+
+  const ps = pairStats(state.game);
+  $('pairBox').innerHTML = ps.list.length
+    ? ps.list.slice(0, 8).map(p => `
+        <div class="flex items-center gap-2">
+          <span class="ball ball--main h-7 w-7 text-[11px]">${pad(p.pair[0])}</span>
+          <span class="ball ball--main h-7 w-7 text-[11px]">${pad(p.pair[1])}</span>
+          <span class="ml-auto font-mono text-[11px] text-haze">${p.count}× in ${ps.rows} draws</span>
+        </div>`).join('')
+    : `<p class="text-sm text-haze">Pair statistics are built from real draws only — import a CSV archive below or
+       record official results in the Learning tab, and the Pattern strategy starts using them.</p>`;
+}
+
+function renderAll() {
+  renderNav();
+  renderModes();
+  renderTickets();
+  renderMatrix();
+  renderLearning();
+  renderStats();
+  $('ticketCount').value = state.count;
+  $('superToggle').checked = state.superzahl;
+  $('mcIter').value = state.mcIterations;
+  $('mcOut').textContent = fmt(state.mcIterations);
+  if (!storageOK) {
+    $('storageNote').hidden = false;
+    $('storageNote').textContent = 'Browser storage is blocked here — learning data lasts for this session only.';
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   11) ACTIONS + EVENTS
+--------------------------------------------------------------------------- */
+let busy = false;
+
+function buildTicket(gameKey, strategyKey, mcCounts) {
+  const g = GAMES[gameKey];
+  const main = pickMain(strategyKey, gameKey, mcCounts).sort(asc);
+  const wantsExtra = !g.extra.optional || state.superzahl;
+  const extra = wantsExtra ? pickExtra(strategyKey === 'adaptive' ? 'hot' : strategyKey, gameKey) : [];
+  return {
+    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+    game: gameKey, strategy: strategyKey, main, extra, at: Date.now(), evaluated: false, result: null
+  };
+}
+
+async function generate() {
+  if (busy) return;
+  busy = true;
+  $('generateBtn').disabled = true;
+
+  let mcCounts = null;
+  if (state.mode === 'montecarlo') {
+    $('mcProgress').hidden = false;
+    $('mcLabel').textContent = `Simulating ${fmt(state.mcIterations)} draws…`;
+    mcCounts = await runMonteCarlo(state.game, state.mcIterations, p => {
+      $('mcBar').style.width = (p * 100).toFixed(1) + '%';
+    });
+    $('mcBar').style.width = '100%';
+    $('mcLabel').textContent = `${fmt(state.mcIterations)} draws simulated.`;
+    setTimeout(() => { $('mcProgress').hidden = true; $('mcBar').style.width = '0%'; }, 1200);
+  } else if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    await spin();
+  }
+
+  state.tickets = Array.from({ length: state.count }, () => buildTicket(state.game, state.mode, mcCounts));
+  state.tickets.forEach(logPrediction);
+  persist();
+  renderTickets();
+  renderModes();
+  renderMatrix();
+  renderLearning();
+
+  busy = false;
+  $('generateBtn').disabled = false;
+}
+
+/** Short tumbling placeholder so a draw reads as an event, not a page update. */
+function spin(ms = 560) {
+  const g = GAMES[state.game];
+  const total = g.main.count + ((!g.extra.optional || state.superzahl) ? g.extra.count : 0);
+  $('emptyState').hidden = true;
+  $('ticketActions').hidden = true;
+  $('tickets').innerHTML = `
+    <article class="stub rounded-2xl border border-edge bg-felt/70 p-4 sm:p-5">
+      <p class="font-mono text-[11px] uppercase tracking-[.16em] text-haze">Drawing…</p>
+      <div class="mt-4 flex flex-wrap items-center gap-2">
+        ${Array.from({ length: total }, (_, i) =>
+          `<span class="ball ball--main h-12 w-12 text-lg tumbling sm:h-14 sm:w-14 sm:text-xl" data-spin
+                 style="animation-delay:${i * 70}ms">00</span>`).join('')}
+      </div>
+    </article>`;
+  const nodes = $('tickets').querySelectorAll('[data-spin]');
+  const timer = setInterval(() => nodes.forEach(n => { n.textContent = pad(randomInt(g.main.max) + 1); }), 60);
+  return new Promise(r => setTimeout(() => { clearInterval(timer); r(); }, ms));
+}
+
+function formatTicket(t, i) {
+  const g = GAMES[t.game];
+  const head = (i != null ? `Ticket ${i + 1} — ` : '') + g.label + ` (${STRATEGIES[t.strategy].label})`;
+  const extra = t.extra.length ? `  |  ${g.extra.name}: ${t.extra.map(pad).join(' ')}` : '';
+  return `${head}: ${t.main.map(pad).join(' ')}${extra}`;
+}
+
+async function copyText(text, label) {
+  try { await navigator.clipboard.writeText(text); }
+  catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (_) {}
+    ta.remove();
+  }
+  toast(label);
+}
+
+function downloadCSV(name, rows) {
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+/* ---- Parsing helpers ----------------------------------------------------- */
+function parseNumbers(text) {
+  return (text || '').split(/[^0-9]+/).filter(Boolean).map(Number);
+}
+
+function validateDraw(gameKey, main, extra) {
+  const g = GAMES[gameKey];
+  if (main.length !== g.main.count) return `Enter exactly ${g.main.count} main numbers.`;
+  if (new Set(main).size !== main.length) return 'Main numbers must be unique.';
+  if (main.some(n => n < g.main.min || n > g.main.max)) return `Main numbers must be between ${g.main.min} and ${g.main.max}.`;
+  const wantExtra = g.extra.optional ? (extra.length ? g.extra.count : 0) : g.extra.count;
+  if (extra.length !== wantExtra) return `Enter ${g.extra.count} ${g.extra.name.toLowerCase()}${g.extra.optional ? ' (or leave empty)' : ''}.`;
+  if (new Set(extra).size !== extra.length) return `${g.extra.name} must be unique.`;
+  if (extra.some(n => n < g.extra.min || n > g.extra.max)) return `${g.extra.name} must be between ${g.extra.min} and ${g.extra.max}.`;
+  return null;
+}
+
+/* ---- Event wiring -------------------------------------------------------- */
+document.querySelectorAll('.view-tab').forEach(b => b.addEventListener('click', () => {
+  state.view = b.dataset.view; renderAll();
+}));
+
+document.querySelectorAll('.game-tab').forEach(b => b.addEventListener('click', () => {
+  state.game = b.dataset.game; state.tickets = []; persist(); renderAll();
+}));
+
+$('modeGrid').addEventListener('click', e => {
+  const btn = e.target.closest('[data-mode]');
+  if (!btn) return;
+  state.mode = btn.dataset.mode; persist(); renderModes();
+});
+
+$('mcIter').addEventListener('input', e => {
+  state.mcIterations = Number(e.target.value);
+  $('mcOut').textContent = fmt(state.mcIterations);
+});
+$('mcIter').addEventListener('change', persist);
+
+const clampCount = v => clamp(Number(v) || 1, 1, 10);
+$('ticketCount').addEventListener('input', e => { state.count = clampCount(e.target.value); persist(); });
+$('ticketCount').addEventListener('blur', e => { e.target.value = state.count; });
+$('plusBtn').addEventListener('click', () => { state.count = clampCount(state.count + 1); $('ticketCount').value = state.count; persist(); });
+$('minusBtn').addEventListener('click', () => { state.count = clampCount(state.count - 1); $('ticketCount').value = state.count; persist(); });
+$('superToggle').addEventListener('change', e => { state.superzahl = e.target.checked; persist(); });
+$('generateBtn').addEventListener('click', generate);
+
+$('tickets').addEventListener('click', e => {
+  const btn = e.target.closest('button[data-action]');
+  if (!btn) return;
+  const i = Number(btn.dataset.idx);
+  const t = state.tickets[i];
+  if (!t) return;
+  if (btn.dataset.action === 'copy') return copyText(formatTicket(t), 'Ticket copied');
+  if (btn.dataset.action === 'regen') {
+    const fresh = buildTicket(t.game, t.strategy, null);
+    state.tickets[i] = fresh;
+    logPrediction(fresh);
+    persist();
+    renderTickets(); renderMatrix(); renderLearning();
+  }
+});
+
+$('copyAllBtn').addEventListener('click', () => {
+  if (!state.tickets.length) return;
+  copyText(state.tickets.map((t, i) => formatTicket(t, i)).join('\n'), 'All numbers copied');
+});
+
+// --- Recording an official result -> the learning step ---------------------
+$('recordBtn').addEventListener('click', () => {
+  const g = GAMES[state.game];
+  const main = parseNumbers($('recMain').value);
+  const extra = parseNumbers($('recExtra').value);
+  const err = validateDraw(state.game, main, extra);
+  $('recError').hidden = !err;
+  if (err) { $('recError').textContent = err; return; }
+
+  const dateVal = $('recDate').value;
+  const draw = {
+    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    game: state.game, main: main.slice().sort(asc), extra: extra.slice().sort(asc),
+    at: dateVal ? new Date(dateVal + 'T21:00:00').getTime() : Date.now(),
+    matched: 0
+  };
+  draw.matched = applyDraw(draw);
+  state.draws.unshift(draw);
+
+  // Flash the rows whose numbers just moved.
+  justUpdated = new Set(state.predictions.filter(p => p.result && p.result.drawId === draw.id).map(p => p.strategy));
+
+  persist();
+  $('recMain').value = ''; $('recExtra').value = '';
+  renderAll();
+  toast(draw.matched
+    ? `${draw.matched} prediction${draw.matched === 1 ? '' : 's'} evaluated — matrix updated`
+    : 'Result saved. No open predictions were waiting for it.');
+});
+
+$('clearLearnBtn').addEventListener('click', () => {
+  if (!confirm('Reset all predictions, recorded draws and matrix scores for both games?')) return;
+  state.predictions = []; state.draws = [];
+  state.matrix = { euro: emptyMatrix(), lotto: emptyMatrix() };
+  persist(); renderAll();
+  toast('Learning data reset');
+});
+
+$('exportMatrixBtn').addEventListener('click', () => {
+  const rows = [['game', 'strategy', 'predictions', 'evaluated', 'avg_main_matched', 'avg_value', 'baseline_value', 'edge', 'prize_rate', 'weight', 'ensemble_share']];
+  ['euro', 'lotto'].forEach(gk => {
+    const p = ensembleWeights(gk);
+    RANKED.concat(['adaptive']).forEach(k => {
+      const r = strategyScore(gk, k);
+      rows.push([GAMES[gk].label, r.label, r.predictions, r.evaluated, r.avgMatched.toFixed(3),
+                 r.avgValue.toFixed(3), baselineValue(gk).toFixed(3), r.edge.toFixed(4),
+                 r.prizeRate.toFixed(4), r.weight, p[k] != null ? p[k].toFixed(4) : '']);
+    });
+  });
+  downloadCSV(`decision-matrix-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+  toast('Matrix exported');
+});
+
+$('exportPredBtn').addEventListener('click', () => {
+  if (!state.predictions.length) return toast('Nothing to export yet');
+  const rows = [['game', 'strategy', 'generated_at', 'main_numbers', 'extra_numbers', 'evaluated', 'main_matched', 'extra_matched', 'prize_tier']];
+  state.predictions.forEach(p => rows.push([
+    GAMES[p.game].label, STRATEGIES[p.strategy].label, new Date(p.at).toISOString(),
+    p.main.join(' '), p.extra.join(' '), p.evaluated ? 'yes' : 'no',
+    p.result ? p.result.mainMatched : '', p.result ? p.result.extraMatched : '',
+    p.result ? (p.result.prize ? 'yes' : 'no') : ''
+  ]));
+  downloadCSV(`predictions-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+  toast('Predictions exported');
+});
+
+// --- Sortable matrix headers ----------------------------------------------
+document.querySelectorAll('[data-sort]').forEach(th => th.addEventListener('click', () => {
+  const k = th.dataset.sort;
+  state.sortDir = state.sortKey === k ? -state.sortDir : -1;
+  state.sortKey = k;
+  renderMatrix();
+}));
+
+// --- CSV archive import ----------------------------------------------------
+$('csvInput').addEventListener('change', e => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const g = GAMES[state.game];
+  const reader = new FileReader();
+  reader.onload = () => {
+    const lines = String(reader.result).split(/\r?\n/).filter(l => l.trim());
+    const rows = [];
+    let skipped = 0;
+    lines.forEach(line => {
+      const nums = parseNumbers(line.replace(/^[^,;]*[,;]/, ''));   // drop a leading date field
+      if (nums.length < g.main.count) { skipped++; return; }
+      const main = nums.slice(0, g.main.count);
+      const extra = nums.slice(g.main.count, g.main.count + g.extra.count);
+      if (new Set(main).size !== main.length ||
+          main.some(n => n < g.main.min || n > g.main.max)) { skipped++; return; }
+      rows.push({ main, extra: extra.filter(n => n >= g.extra.min && n <= g.extra.max) });
+    });
+    if (!rows.length) { $('csvNote').hidden = false; $('csvNote').className = 'mt-3 text-sm text-ember';
+      $('csvNote').textContent = 'No usable rows found. Expected one draw per line.'; return; }
+    state.archive[state.game] = { rows, importedAt: Date.now() };
+    persist(); renderAll();
+    $('csvNote').hidden = false;
+    $('csvNote').className = 'mt-3 text-sm text-mint';
+    $('csvNote').textContent = `${fmt(rows.length)} draws imported${skipped ? `, ${skipped} lines skipped` : ''}. Frequencies and pairs now use your archive.`;
+  };
+  reader.readAsText(file);
+});
+
+$('resetDataBtn').addEventListener('click', () => {
+  state.archive[state.game] = null;
+  persist(); renderAll();
+  $('csvNote').hidden = true;
+  toast('Back to the built-in frequencies');
+});
+
+// --- Keyboard shortcut -----------------------------------------------------
+document.addEventListener('keydown', e => {
+  if (e.key !== ' ' && e.key !== 'Enter') return;
+  if (state.view !== 'generate') return;
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'button' || e.target.isContentEditable) return;
+  e.preventDefault();
+  generate();
+});
+
+/* ---------------------------------------------------------------------------
+   PWA: inline manifest so a lone index.html still describes itself; the real
+   file wins when it is served alongside.
+--------------------------------------------------------------------------- */
+(function pwa() {
+  const icon = 'data:image/svg+xml,' + encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+       <rect width="512" height="512" rx="96" fill="#0A0E1C"/>
+       <circle cx="256" cy="240" r="150" fill="#E9B44C"/>
+       <text x="256" y="300" font-family="sans-serif" font-size="150" font-weight="700"
+             text-anchor="middle" fill="#0A0E1C">49</text>
+     </svg>`);
+  const manifest = {
+    name: 'Lotto & EuroJackpot Smart Generator', short_name: 'Smart Lotto',
+    start_url: '.', display: 'standalone', background_color: '#0A0E1C', theme_color: '#0A0E1C',
+    icons: [{ src: icon, sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }]
+  };
+  const link = document.createElement('link');
+  link.rel = 'manifest';
+  document.head.appendChild(link);
+  fetch('./manifest.webmanifest', { method: 'HEAD' })
+    .then(r => { if (!r.ok) throw 0; link.href = './manifest.webmanifest'; })
+    .catch(() => { link.href = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' })); });
+
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+  }
+})();
+
+$('recDate').valueAsDate = new Date();
+renderAll();
+</script>
+</body>
+</html>

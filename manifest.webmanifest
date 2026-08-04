@@ -1,0 +1,14 @@
+{
+  "name": "Lotto & EuroJackpot Smart Generator",
+  "short_name": "Smart Lotto",
+  "description": "Client-side random number generator for EuroJackpot and Lotto 6 aus 49.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A0E1C",
+  "theme_color": "#0A0E1C",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
