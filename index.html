@@ -246,6 +246,31 @@
 
 <!-- ======================= VIEW: LEARNING ======================= -->
 <section id="view-learning" hidden>
+
+  <!-- Automatic results feed -->
+  <div class="mb-5 rounded-2xl border border-edge bg-felt/60 p-4 sm:p-5">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h2 class="font-display text-xl font-bold">Automatic results feed</h2>
+        <p class="mt-1 text-sm text-haze">
+          Official draws come from <code class="font-mono text-[12px] text-ivory">data/draws.json</code>, refreshed
+          by a scheduled job after every draw. New results are recorded and evaluated without you typing anything.
+        </p>
+      </div>
+      <label class="flex shrink-0 cursor-pointer items-center gap-2 font-mono text-[11px] uppercase tracking-[.16em] text-haze">
+        <input id="autoSyncToggle" type="checkbox" class="h-4 w-4 accent-mint" />
+        Auto
+      </label>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+      <button id="syncBtn" class="rounded-xl border border-mint/40 bg-mint/10 px-4 py-2 font-semibold text-mint transition hover:bg-mint/20 active:scale-[.99] disabled:opacity-50">
+        Sync now
+      </button>
+      <p id="syncStatus" class="font-mono text-[11px] text-haze"></p>
+    </div>
+  </div>
+
   <div class="rounded-2xl border border-edge bg-felt/60 p-4 sm:p-5">
     <h2 class="font-display text-xl font-bold">Record an official draw result</h2>
     <p class="mt-1 text-sm text-haze">
@@ -559,6 +584,8 @@ const state = {
   predictions: [],                               // every generated ticket, newest first
   draws: [],                                     // recorded official results
   archive: { euro: null, lotto: null },          // imported draw lists (raw combinations)
+  autoSync: true,                                // pull data/draws.json on load
+  lastSync: 0,
   matrix: { euro: emptyMatrix(), lotto: emptyMatrix() },
   sortKey: 'weight',
   sortDir: -1
@@ -574,6 +601,8 @@ const state = {
   if (Number.isInteger(s.mcIterations)) state.mcIterations = clamp(s.mcIterations, 10000, 1000000);
   if (Array.isArray(s.predictions)) state.predictions = s.predictions.slice(0, PRED_LIMIT);
   if (Array.isArray(s.draws)) state.draws = s.draws;
+  if (typeof s.autoSync === 'boolean') state.autoSync = s.autoSync;
+  if (Number.isFinite(s.lastSync)) state.lastSync = s.lastSync;
   if (s.archive) state.archive = { euro: s.archive.euro || null, lotto: s.archive.lotto || null };
   if (s.matrix) {
     ['euro', 'lotto'].forEach(g => {
@@ -588,7 +617,8 @@ const state = {
 const persist = () => store.save({
   game: state.game, mode: state.mode, count: state.count, superzahl: state.superzahl,
   mcIterations: state.mcIterations, predictions: state.predictions, draws: state.draws,
-  archive: state.archive, matrix: state.matrix
+  archive: state.archive, matrix: state.matrix,
+  autoSync: state.autoSync, lastSync: state.lastSync
 });
 
 /* ---------------------------------------------------------------------------
@@ -970,6 +1000,115 @@ function applyDraw(draw) {
 }
 
 /* ---------------------------------------------------------------------------
+   9b) AUTOMATIC RESULTS FEED
+
+   `data/draws.json` is produced by scripts/fetch-draws.mjs, run on a schedule
+   by GitHub Actions after every draw and committed next to this page. Serving
+   it from the same origin sidesteps CORS entirely — the browser only ever
+   talks to the site it is already on — and keeps the app fully static.
+
+   Everything the feed offers is re-validated here. It is fetched over the
+   network like any other input, and a draw with impossible numbers would
+   silently poison the matrix, so the feed is trusted for convenience, never
+   for correctness.
+--------------------------------------------------------------------------- */
+const DRAWS_FEED = './data/draws.json';
+
+/** Local calendar day of a timestamp, as `YYYY-MM-DD`. */
+function isoDay(ts) {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Identity of a draw: one result per game per day. */
+const drawIdent = d => `${d.game}|${d.date || isoDay(d.at)}`;
+
+const sync = { busy: false, at: null, message: '', ok: null };
+
+/**
+ * Pull the feed, record every draw not already known, and let applyDraw() fold
+ * the outcomes into the matrix. Draws are applied oldest first so predictions
+ * are evaluated in the order the draws actually happened.
+ */
+async function syncDraws({ silent = false } = {}) {
+  if (sync.busy) return;
+  sync.busy = true;
+  renderSync();
+
+  try {
+    const res = await fetch(DRAWS_FEED, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`feed unavailable (HTTP ${res.status})`);
+    const feed = await res.json();
+
+    const known = new Set(state.draws.map(drawIdent));
+    const fresh = [];
+
+    Object.keys(GAMES).forEach(gameKey => {
+      const rows = (feed && feed.games && feed.games[gameKey] && feed.games[gameKey].draws) || [];
+      rows.forEach(row => {
+        if (!row || typeof row.date !== 'string') return;
+        const main = (row.main || []).map(Number);
+        const extra = (row.extra || []).map(Number);
+        if (validateDraw(gameKey, main, extra)) return;      // reject anything malformed
+        const at = Date.parse(row.date + 'T21:00:00');
+        if (Number.isNaN(at) || at > Date.now() + 86400000) return;
+        const ident = `${gameKey}|${row.date}`;
+        if (known.has(ident)) return;
+        known.add(ident);
+        fresh.push({
+          id: 'feed:' + ident,
+          game: gameKey, date: row.date,
+          main: main.slice().sort(asc), extra: extra.slice().sort(asc),
+          at, matched: 0, source: row.source || 'feed'
+        });
+      });
+    });
+
+    fresh.sort((a, b) => a.at - b.at);
+
+    let evaluated = 0;
+    const moved = new Set();
+    fresh.forEach(draw => {
+      draw.matched = applyDraw(draw);
+      evaluated += draw.matched;
+      state.draws.unshift(draw);
+    });
+    const freshIds = new Set(fresh.map(d => d.id));
+    state.predictions.forEach(p => {
+      if (p.result && freshIds.has(p.result.drawId)) moved.add(p.strategy);
+    });
+
+    sync.ok = true;
+    sync.at = state.lastSync = Date.now();
+    sync.message = fresh.length
+      ? `${fresh.length} new draw${fresh.length === 1 ? '' : 's'}, ${evaluated} prediction${evaluated === 1 ? '' : 's'} evaluated`
+      : 'Up to date — no new draws.';
+
+    if (fresh.length) {
+      justUpdated = moved;
+      persist();
+      renderAll();
+      if (!silent || evaluated) {
+        toast(evaluated
+          ? `${fresh.length} draw${fresh.length === 1 ? '' : 's'} synced — ${evaluated} prediction${evaluated === 1 ? '' : 's'} evaluated`
+          : `${fresh.length} draw${fresh.length === 1 ? '' : 's'} synced`);
+      }
+    } else {
+      persist();
+      if (!silent) toast('Already up to date');
+    }
+  } catch (e) {
+    sync.ok = false;
+    sync.at = Date.now();
+    sync.message = e.message || 'Sync failed.';
+    if (!silent) toast('Sync failed — ' + sync.message);
+  } finally {
+    sync.busy = false;
+    renderSync();
+  }
+}
+
+/* ---------------------------------------------------------------------------
    10) RENDERING
 --------------------------------------------------------------------------- */
 const $ = id => document.getElementById(id);
@@ -1132,8 +1271,26 @@ function renderMatrix() {
 }
 
 /* ---- Learning ------------------------------------------------------------ */
+function renderSync() {
+  const btn = $('syncBtn'), out = $('syncStatus');
+  if (!btn || !out) return;
+  btn.disabled = sync.busy;
+  btn.textContent = sync.busy ? 'Syncing…' : 'Sync now';
+  $('autoSyncToggle').checked = state.autoSync;
+
+  const feedDraws = state.draws.filter(d => d.game === state.game && d.id && String(d.id).startsWith('feed:'));
+  const when = sync.at ? timeOf(sync.at) : (state.lastSync ? timeOf(state.lastSync) : null);
+  out.className = 'font-mono text-[11px] ' + (sync.ok === false ? 'text-ember' : 'text-haze');
+  out.textContent = sync.busy
+    ? 'Reading the results feed…'
+    : [when ? `Last check ${when}` : 'Not synced yet', sync.message,
+       feedDraws.length ? `${feedDraws.length} auto-recorded` : null]
+      .filter(Boolean).join(' · ');
+}
+
 function renderLearning() {
   const g = GAMES[state.game];
+  renderSync();
   $('recGame').textContent = g.label;
   $('recMainHint').textContent = `(${g.main.count} numbers, ${g.main.min}\u2013${g.main.max})`;
   $('recExtraLabel').textContent = g.extra.optional
@@ -1449,6 +1606,9 @@ $('recordBtn').addEventListener('click', () => {
     id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
     game: state.game, main: main.slice().sort(asc), extra: extra.slice().sort(asc),
     at: dateVal ? new Date(dateVal + 'T21:00:00').getTime() : Date.now(),
+    // The date is what the feed dedupes against, so a result entered by hand is
+    // not recorded a second time when the same draw arrives automatically.
+    date: dateVal || isoDay(Date.now()),
     matched: 0
   };
   draw.matched = applyDraw(draw);
@@ -1463,6 +1623,23 @@ $('recordBtn').addEventListener('click', () => {
   toast(draw.matched
     ? `${draw.matched} prediction${draw.matched === 1 ? '' : 's'} evaluated — matrix updated`
     : 'Result saved. No open predictions were waiting for it.');
+});
+
+// --- Automatic results feed ------------------------------------------------
+$('syncBtn').addEventListener('click', () => syncDraws());
+
+$('autoSyncToggle').addEventListener('change', e => {
+  state.autoSync = e.target.checked;
+  persist();
+  if (state.autoSync) syncDraws();
+});
+
+// Re-check when the tab comes back into focus, at most twice an hour.
+const SYNC_INTERVAL = 30 * 60 * 1000;
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  if (!state.autoSync || Date.now() - state.lastSync < SYNC_INTERVAL) return;
+  syncDraws({ silent: true });
 });
 
 $('clearLearnBtn').addEventListener('click', () => {
@@ -1587,6 +1764,10 @@ document.addEventListener('keydown', e => {
 
 $('recDate').valueAsDate = new Date();
 renderAll();
+
+// Pull the results feed on load. Silent: a first-time visitor with no
+// predictions has nothing to learn from it yet and does not need a toast.
+if (state.autoSync) syncDraws({ silent: true });
 </script>
 </body>
 </html>

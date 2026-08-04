@@ -1,0 +1,65 @@
+name: Update draw results
+
+# Publishes data/draws.json, which the app polls to record official results and
+# update its decision matrix without anyone typing numbers in.
+#
+# Draw times (Europe/Berlin):
+#   EuroJackpot   Tue + Fri, 21:00
+#   Lotto 6aus49  Wed + Sat, 18:25 (Sat 19:25)
+# Cron is UTC, so these run at 21:30 UTC — comfortably after every draw in both
+# CET and CEST — on each of the four draw days, plus a morning catch-up in case
+# a source was down or a result was published late.
+
+on:
+  schedule:
+    - cron: '30 21 * * 2,3,5,6'
+    - cron: '15 6 * * 1,3,4,6,7'
+  workflow_dispatch:
+    inputs:
+      check_only:
+        description: 'Probe the sources and report, without committing'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-draws
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch latest draws
+        env:
+          # Optional: a feed you control that already speaks this project's
+          # JSON. Set it under Settings -> Secrets and variables -> Actions ->
+          # Variables. When present it takes priority over every scraper.
+          CUSTOM_DRAWS_URL: ${{ vars.CUSTOM_DRAWS_URL }}
+        run: |
+          if [ "${{ inputs.check_only }}" = "true" ]; then
+            node scripts/fetch-draws.mjs --check
+          else
+            node scripts/fetch-draws.mjs
+          fi
+
+      - name: Commit if the feed changed
+        if: ${{ inputs.check_only != true }}
+        run: |
+          if git diff --quiet -- data/draws.json; then
+            echo "No new draws."
+            exit 0
+          fi
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/draws.json
+          git commit -m "data: draw results as of $(date -u +%Y-%m-%d)"
+          git push

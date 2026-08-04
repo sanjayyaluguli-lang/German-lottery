@@ -24,6 +24,10 @@ Settings → Pages → Deploy from branch → `main` / root.
 | `index.html` | The entire app: markup, Tailwind config, historical data, logic |
 | `manifest.webmanifest`, `icon.svg` | PWA metadata |
 | `sw.js` | Service worker, cache-first offline support |
+| `data/draws.json` | Published draw results — the feed the app learns from |
+| `scripts/fetch-draws.mjs` | Builds that feed. Run by GitHub Actions after each draw |
+| `scripts/sources.mjs` | One adapter per results source |
+| `scripts/draw-schema.mjs` | Game rules and draw validation |
 
 ## The four tabs
 
@@ -34,7 +38,8 @@ ticket is stored as a *prediction*, tagged with the strategy that produced it.
 predictions made, predictions evaluated, average numbers matched, tier hits (`3+1` = three main numbers
 and one extra), prize rate, edge and weight.
 
-**Learning** — enter an official draw result. Every open prediction for that game is compared against it,
+**Learning** — official results arrive on their own from the [results feed](#automatic-results-feed);
+you can also enter a draw by hand. Either way every open prediction for that game is compared against it,
 the matrix updates, and the rows that moved flash.
 
 **Statistics** — frequency heatmap, hottest and coldest numbers, structural profile, most common pairs,
@@ -108,7 +113,8 @@ Euro number, or 2 main + Superzahl).
 
 1. **Generate** — the ticket is stored with its strategy, numbers and timestamp, and the strategy's
    `predictions` counter increments.
-2. **Record Actual Draw Result** — you enter the official numbers and the draw date.
+2. **Record Actual Draw Result** — the [results feed](#automatic-results-feed) supplies the official
+   numbers after each draw, or you enter them yourself.
 3. **Evaluate** — every prediction for that game that is not yet evaluated and was created *before* the
    draw is compared: main hits, extra hits, tier, prize yes/no. Predictions are evaluated exactly once,
    so recording the same draw twice cannot inflate anything.
@@ -119,6 +125,115 @@ Euro number, or 2 main + Superzahl).
 All of it lives in `localStorage` under `lotto-smart-v1` (predictions, recorded draws, matrix, imported
 archive). Nothing is sent anywhere. The progress bar tracks evaluated predictions toward 60, the point
 where weights can move reasonably freely.
+
+## Automatic results feed
+
+Step 2 of that loop used to be the only manual part. It isn't any more: a scheduled job fetches the
+official results and publishes them as `data/draws.json`, and the app records everything new it finds
+there — no typing, no accounts, no backend.
+
+### How it fits together
+
+```
+GitHub Actions (after each draw)
+  └─ scripts/fetch-draws.mjs
+       ├─ tries each source in scripts/sources.mjs, in order
+       ├─ validates every candidate against scripts/draw-schema.mjs
+       └─ merges into data/draws.json, commits it
+                    │
+GitHub Pages serves data/draws.json next to index.html
+                    │
+  └─ the app fetches it on load, on "Sync now", and when the tab
+     regains focus (at most twice an hour)
+       ├─ re-validates every draw
+       ├─ skips any it already has (one result per game per day)
+       └─ applies the rest oldest-first through applyDraw()
+```
+
+Serving the feed from the site's own origin is the point of the design. A static page cannot call a
+lottery website directly — the browser's same-origin policy blocks it, and none of those sites send CORS
+headers — so the fetch happens in CI instead, where there is no browser to object. The app only ever
+talks to the host it is already loaded from.
+
+### The feed format
+
+```json
+{
+  "version": 1,
+  "updated": "2026-08-04T21:32:11.508Z",
+  "games": {
+    "euro": {
+      "label": "EuroJackpot",
+      "latest": { "date": "2026-08-04", "main": [4,17,23,38,45], "extra": [3,9], "source": "lotto.de" },
+      "count": 128,
+      "draws": [ "newest first, up to 750 per game" ]
+    },
+    "lotto": { "…": "same shape" }
+  }
+}
+```
+
+It is a plain static file, so anything else may read it too.
+
+### Schedule
+
+`.github/workflows/update-draws.yml` runs at 21:30 UTC on each of the four draw days — after
+EuroJackpot's 21:00 Tuesday/Friday draw and 6aus49's Wednesday/Saturday draw in both CET and CEST — plus
+a morning catch-up run in case a source was down or a result was published late. It only commits when
+`data/draws.json` actually changed.
+
+Enable Actions on the repository once (Settings → Actions → General → Workflow permissions →
+**Read and write permissions**) so the job can push its commit.
+
+### Sources, and how they break
+
+Germany's lottery operators publish no open results API, so each adapter in `scripts/sources.mjs` reads a
+public results page. That is inherently fragile — a site redesign breaks a parser. Two things keep
+fragile from meaning wrong:
+
+- **Nothing unvalidated reaches the feed.** `validateDraw()` checks the count, range, uniqueness and
+  ordering of every number, that the date is real, recent and lands on an actual draw day for that game,
+  and that the newest draw a source offers is at most 21 days old. A broken parser therefore produces
+  *no* draw, never a plausible-looking wrong one — and the app re-runs the same range checks on whatever
+  the feed hands it, because a feed fetched over the network is an input like any other.
+- **Sources are tried in order and fall through.** The first one to return a valid draw wins; if it
+  fails, the next is tried. A failed run leaves the previous `data/draws.json` untouched and exits
+  non-zero, so it shows up as a red run rather than as silently missing data.
+
+To see which sources actually work right now:
+
+```bash
+node scripts/fetch-draws.mjs --check       # probes every source, writes nothing
+node scripts/fetch-draws.mjs --game euro   # one game
+```
+
+or run the workflow manually with **Probe the sources** ticked. Node 20+, no dependencies.
+
+> The adapters were written against these sites' published pages but could not be executed against the
+> live internet from the environment that built them. Run `--check` once after deploying to confirm which
+> ones your network actually reaches, and treat the escape hatch below as the supported path if none do.
+
+### The escape hatch
+
+If every scraper breaks, or you already have a results source you trust, set the repository variable
+`CUSTOM_DRAWS_URL` (Settings → Secrets and variables → Actions → Variables). It takes priority over every
+scraper and needs no code change. The URL may contain `{game}`, replaced with `euro` or `lotto`, and may
+return either this project's `draws.json` shape or a bare array:
+
+```json
+[{ "date": "2026-08-04", "main": [4,17,23,38,45], "extra": [3,9] }]
+```
+
+Adding a source properly is one object appended to `SOURCES` in `scripts/sources.mjs`: an `id`, the
+`games` it covers, and an async `fetch(gameKey)` returning candidate draws. Validation and merging are
+already handled.
+
+### What this does and does not change
+
+It automates the bookkeeping, and nothing else. The matrix now updates from real results without anyone
+remembering to type them in, which makes the learning loop honest — every draw counts, not just the ones
+you felt like recording. It does not make any strategy better. See the closing section: the weights will
+still wander around 50 forever, only now they will do it unattended.
 
 ## How Adaptive mode combines strategies
 
