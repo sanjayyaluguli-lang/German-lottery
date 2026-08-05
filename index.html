@@ -1312,10 +1312,17 @@ function renderLearning() {
   $('predList').innerHTML = preds.length ? preds.slice(0, 40).map((t, i) => {
     const s = STRATEGIES[t.strategy];
     const hit = t.result;
-    const balls = t.main.map(n => {
-      const on = hit && state.draws.find(d => d.id === hit.drawId)?.main.includes(n);
-      return `<span class="ball ${on ? 'ball--hit' : 'ball--main'} h-7 w-7 text-[11px]">${pad(n)}</span>`;
-    }).join('');
+    // The winning draw, so matched numbers can be highlighted.
+    const won = hit ? state.draws.find(d => d.id === hit.drawId) : null;
+    const balls = t.main.map(n =>
+      `<span class="ball ${won && won.main.includes(n) ? 'ball--hit' : 'ball--main'} h-7 w-7 text-[11px]">${pad(n)}</span>`
+    ).join('');
+    // Euro numbers / Superzahl, in the same divider style the draw list uses.
+    const extras = t.extra.length
+      ? '<span class="mx-1 h-5 w-px bg-edge"></span>' + t.extra.map(n =>
+          `<span class="ball ${won && won.extra.includes(n) ? 'ball--hit' : GAMES[t.game].extra.ballClass} h-7 w-7 text-[11px]">${pad(n)}</span>`
+        ).join('')
+      : '';
     const status = hit
       ? `<span class="${hit.prize ? 'text-mint' : 'text-haze'}">${hit.mainMatched} main${t.extra.length ? ' + ' + hit.extraMatched : ''}${hit.prize ? ' · prize tier' : ''}</span>`
       : '<span class="text-haze/60">awaiting result</span>';
@@ -1324,7 +1331,7 @@ function renderLearning() {
         <span class="flex w-28 shrink-0 items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-haze">
           <span class="h-1.5 w-1.5 rounded-full" style="background:${s.color}"></span>${s.short}
         </span>
-        <div class="flex flex-wrap items-center gap-1.5">${balls}</div>
+        <div class="flex flex-wrap items-center gap-1.5">${balls}${extras}</div>
         <span class="ml-auto text-right font-mono text-[10px] leading-tight">
           ${status}<br /><span class="text-haze/60">${timeOf(t.at)}</span>
         </span>
