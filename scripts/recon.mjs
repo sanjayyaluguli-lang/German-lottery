@@ -1,71 +1,58 @@
 #!/usr/bin/env node
 /**
- * TEMPORARY diagnostic. Probes candidate results URLs and reports what each
- * one actually returns, so the adapters in sources.mjs can be written against
- * real markup instead of guesses. Delete once the sources work.
+ * TEMPORARY diagnostic. Round 2.
+ *
+ * Round 1 found EuroJackpot: euro-jackpot.net's archive serves a clean table,
+ * `<a href="/results/07-08-2026">` for the date and `<li class="ball">` /
+ * `<li class="euro">` for the numbers. It is EuroJackpot-only, so this round
+ * hunts for the same thing for 6aus49 — starting with lotto.net, which looks
+ * like the same publisher's network, and dielottozahlende.net.
+ *
+ * Round 1 also ruled out: lotto.de (numbers are client-rendered into an empty
+ * `WinningNumbers__loading` shell), westlotto.de (404 / 400 on every path),
+ * eurojackpot.org and lottozahlenonline.com (404).
  */
 
 const UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36';
+const YEAR = new Date().getUTCFullYear();
 
 const CANDIDATES = [
-  ['euro', 'https://www.euro-jackpot.net/en/results'],
-  ['euro', 'https://www.euro-jackpot.net/en/results-archive-2026'],
-  ['euro', 'https://www.lotto.de/eurojackpot/zahlen-quoten'],
-  ['euro', 'https://www.lotto.de/eurojackpot/gewinnzahlen'],
-  ['euro', 'https://www.lotto.de/eurojackpot'],
-  ['euro', 'https://www.westlotto.de/eurojackpot/zahlen-quoten/eurojackpot-gewinnzahlen.html'],
-  ['euro', 'https://www.eurojackpot.org/en/results/'],
-  ['euro', 'https://www.lottozahlenonline.com/eurojackpot/zahlen-archiv.php'],
-  ['lotto', 'https://www.lotto.de/lotto-6aus49/zahlen-quoten'],
-  ['lotto', 'https://www.lotto.de/lotto-6aus49/lottozahlen'],
-  ['lotto', 'https://www.lotto.de/lotto-6aus49'],
-  ['lotto', 'https://www.westlotto.de/lotto-6aus49/zahlen-quoten/lotto-gewinnzahlen.html'],
-  ['lotto', 'https://www.lottozahlen.net/'],
+  ['lotto', `https://www.lotto.net/german-lotto/results`],
+  ['lotto', `https://www.lotto.net/german-lotto/results-archive-${YEAR}`],
+  ['lotto', `https://www.lotto.net/german-lotto/past-results`],
   ['lotto', 'https://www.dielottozahlende.net/'],
-  ['both', 'https://www.westlotto.de/wlinfo/WL_InfoService?client=wlinfo&gruppe=ZahlenUndQuoten'],
-  ['both', 'https://www.westlotto.de/wlinfo/WL_InfoService?client=wlinfo&gruppe=ZahlenUndQuoten&spielart=eurojackpot']
+  ['lotto', 'https://www.dielottozahlende.net/lottozahlen/6aus49'],
+  ['lotto', 'https://www.lotto-bayern.de/lotto-6aus49/gewinnzahlen'],
+  ['euro',  `https://www.lotto.net/eurojackpot/results-archive-${YEAR}`],
+  ['euro',  `https://www.euro-jackpot.net/results-archive-${YEAR}`]
 ];
 
-const KEYWORDS = /(gewinnzahl|winningnumber|eurozahl|superzahl|lottozahl|drawresult|"numbers"|ball)/i;
+/** Print a decent slab of raw markup around the first ball-like element. */
+function slab(body) {
+  const anchors = [/<ul[^>]*class="[^"]*balls/i, /class="[^"]*number-card/i, /class="[^"]*\bball\b/i,
+    /class="[^"]*numbers/i, /gewinnzahl/i];
+  for (const re of anchors) {
+    const m = re.exec(body);
+    if (m) return body.slice(Math.max(0, m.index - 500), m.index + 1600).replace(/\s+/g, ' ');
+  }
+  return null;
+}
 
-async function probe(url) {
-  const started = Date.now();
+async function probe(game, url) {
+  console.log(`\n${'='.repeat(78)}\n[${game}] ${url}`);
   try {
     const res = await fetch(url, {
-      headers: { 'user-agent': UA, accept: 'text/html,application/json,*/*', 'accept-language': 'de-DE,de;q=0.9' },
+      headers: { 'user-agent': UA, accept: 'text/html,*/*', 'accept-language': 'de-DE,de;q=0.9,en;q=0.8' },
       signal: AbortSignal.timeout(25000), redirect: 'follow'
     });
     const body = await res.text();
-    console.log(`\n${'='.repeat(78)}\n${url}`);
-    console.log(`  HTTP ${res.status} ${res.headers.get('content-type') || '?'} ${body.length}b ${Date.now() - started}ms`);
-    if (res.url !== url) console.log(`  redirected -> ${res.url}`);
-    if (!res.ok) { console.log('  ' + body.slice(0, 200).replace(/\s+/g, ' ')); return; }
-
-    // Class/attribute names that look like ball markup.
-    const classes = new Set();
-    for (const m of body.matchAll(/class="([^"]{0,120})"/g)) {
-      for (const c of m[1].split(/\s+/)) if (/ball|zahl|number|kugel|lotto|draw/i.test(c)) classes.add(c);
-    }
-    console.log('  ball-ish classes:', [...classes].slice(0, 25).join(' ') || '(none)');
-
-    // JSON keys that look like draw data.
-    const keys = new Set();
-    for (const m of body.matchAll(/"([A-Za-z_]{3,30})"\s*:/g)) if (KEYWORDS.test(m[1])) keys.add(m[1]);
-    console.log('  draw-ish JSON keys:', [...keys].slice(0, 20).join(' ') || '(none)');
-
-    // Context around the first few keyword hits — this is what a parser needs.
-    let shown = 0;
-    for (const m of body.matchAll(new RegExp(KEYWORDS.source, 'gi'))) {
-      if (shown++ >= 4) break;
-      console.log(`  ...${body.slice(Math.max(0, m.index - 160), m.index + 340).replace(/\s+/g, ' ')}...`);
-    }
-    if (!shown) console.log('  no keyword hits — page is probably JS-rendered');
+    console.log(`  HTTP ${res.status} ${body.length}b${res.url !== url ? ` -> ${res.url}` : ''}`);
+    if (!res.ok) return;
+    const s = slab(body);
+    console.log(s ? '  ' + s : '  no ball-like markup found');
   } catch (e) {
-    console.log(`\n${'='.repeat(78)}\n${url}\n  ERROR ${e.message}`);
+    console.log(`  ERROR ${e.message}`);
   }
 }
 
-for (const [game, url] of CANDIDATES) {
-  process.stdout.write(`\n[${game}]`);
-  await probe(url);
-}
+for (const [game, url] of CANDIDATES) await probe(game, url);
