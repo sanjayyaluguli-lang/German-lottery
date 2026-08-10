@@ -27,6 +27,7 @@ Settings → Pages → Deploy from branch → `main` / root.
 | `data/draws.json` | Published draw results — the feed the app learns from |
 | `scripts/fetch-draws.mjs` | Builds that feed. Run by GitHub Actions after each draw |
 | `scripts/sources.mjs` | One adapter per results source |
+| `scripts/sources.test.mjs` | Parser tests over captured markup, no network |
 | `scripts/draw-schema.mjs` | Game rules and draw validation |
 
 ## The four tabs
@@ -66,9 +67,10 @@ Embedded as plain counts, taken from published draw archives:
 - **Lotto 6aus49** — 5,029 draws since 9 October 1955; the Superzahl counts cover the 3,143 draws since
   it was introduced in December 1991.
 
-Both are static snapshots. **Pair statistics ship empty on purpose** — they need actual draw
-combinations, not per-number counts, so the Pattern strategy falls back to structural rules until you
-import an archive (Statistics tab) or record results yourself. CSV format, one draw per line:
+Both are static snapshots. **Pair statistics ship empty in the page itself** — they need actual draw
+combinations, not per-number counts. In practice the [results feed](#automatic-results-feed) fills them
+in: it backfills EuroJackpot from the source's yearly archives, so the Pattern strategy has real pairs to
+work with on first load. You can also import an archive (Statistics tab) or record results yourself. CSV format, one draw per line:
 
 ```
 date,n1,n2,n3,n4,n5[,n6],extra1[,extra2]
@@ -164,8 +166,8 @@ talks to the host it is already loaded from.
   "games": {
     "euro": {
       "label": "EuroJackpot",
-      "latest": { "date": "2026-08-04", "main": [4,17,23,38,45], "extra": [3,9], "source": "lotto.de" },
-      "count": 128,
+      "latest": { "date": "2026-08-07", "main": [1,3,6,13,23], "extra": [5,7], "source": "euro-jackpot.net" },
+      "count": 167,
       "draws": [ "newest first, up to 750 per game" ]
     },
     "lotto": { "…": "same shape" }
@@ -182,14 +184,28 @@ EuroJackpot's 21:00 Tuesday/Friday draw and 6aus49's Wednesday/Saturday draw in 
 a morning catch-up run in case a source was down or a result was published late. It only commits when
 `data/draws.json` actually changed.
 
-Enable Actions on the repository once (Settings → Actions → General → Workflow permissions →
-**Read and write permissions**) so the job can push its commit.
+The workflow declares `permissions: contents: write`, which is enough to push its commit on a personal
+repository — no repository setting to change. If an organisation policy caps the default `GITHUB_TOKEN`
+scope, the commit step will fail with a 403; the fix is Settings → Actions → General → Workflow
+permissions → **Read and write permissions**.
 
 ### Sources, and how they break
 
-Germany's lottery operators publish no open results API, so each adapter in `scripts/sources.mjs` reads a
-public results page. That is inherently fragile — a site redesign breaks a parser. Two things keep
-fragile from meaning wrong:
+Germany's lottery operators publish no open results API, and the obvious candidates are dead ends:
+`lotto.de` renders its numbers client-side into an empty `WinningNumbers` shell, and WestLotto's
+`WL_InfoService` — for years *the* machine-readable feed for German draws — now answers `400` on every
+path. So each adapter in `scripts/sources.mjs` reads a public results page instead:
+
+| Adapter | Covers | Reads |
+|---|---|---|
+| `euro-jackpot.net` | EuroJackpot | The yearly archive table. The date comes from each row's `/results/DD-MM-YYYY` permalink, and main vs. Euro numbers are separated by CSS class, so nothing is positional. Reads the previous year too, since in early January the current archive is nearly empty. |
+| `dielottozahlende.net` | Both | The front page, which carries the latest draw for each game as a card. Numbers appear in draw order, not sorted. |
+
+EuroJackpot is deliberately covered twice: both sites rate-limit, and a shared CI IP gets refused often
+enough that one source alone is not dependable. `get()` retries once with a backoff, and a refusal falls
+through to the next source.
+
+Scraping is inherently fragile — a redesign breaks a parser. Two things keep fragile from meaning wrong:
 
 - **Nothing unvalidated reaches the feed.** `validateDraw()` checks the count, range, uniqueness and
   ordering of every number, that the date is real, recent and lands on an actual draw day for that game,
@@ -200,18 +216,18 @@ fragile from meaning wrong:
   fails, the next is tried. A failed run leaves the previous `data/draws.json` untouched and exits
   non-zero, so it shows up as a red run rather than as silently missing data.
 
-To see which sources actually work right now:
+`scripts/sources.test.mjs` runs the exported parsers over markup captured verbatim from both sites, and
+runs in CI before any fetch — so a red run tells you whether the site changed or the parser was already
+broken. It covers the details that are easy to get wrong: day-month-year permalinks, numbers in draw
+order rather than sorted, and a Superzahl of `0`, which must not be dropped as falsy.
 
 ```bash
-node scripts/fetch-draws.mjs --check       # probes every source, writes nothing
+node scripts/sources.test.mjs              # parser tests, no network
+node scripts/fetch-draws.mjs --check       # probes every source live, writes nothing
 node scripts/fetch-draws.mjs --game euro   # one game
 ```
 
 or run the workflow manually with **Probe the sources** ticked. Node 20+, no dependencies.
-
-> The adapters were written against these sites' published pages but could not be executed against the
-> live internet from the environment that built them. Run `--check` once after deploying to confirm which
-> ones your network actually reaches, and treat the escape hatch below as the supported path if none do.
 
 ### The escape hatch
 
