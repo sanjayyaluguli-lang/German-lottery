@@ -7,13 +7,15 @@ name: Update draw results
 #   EuroJackpot   Tue + Fri, 21:00
 #   Lotto 6aus49  Wed + Sat, 18:25 (Sat 19:25)
 # Cron is UTC, so these run at 21:30 UTC — comfortably after every draw in both
-# CET and CEST — on each of the four draw days, plus a morning catch-up in case
-# a source was down or a result was published late.
+# CET and CEST — on each of the four draw days (Tue, Wed, Fri, Sat), plus a
+# catch-up the morning after each of them (Wed, Thu, Sat, Sun) in case a source
+# was down or a result was published late. Day 0 is Sunday; GitHub's cron does
+# not accept 7 as an alias for it.
 
 on:
   schedule:
     - cron: '30 21 * * 2,3,5,6'
-    - cron: '15 6 * * 1,3,4,6,7'
+    - cron: '15 6 * * 0,3,4,6'
   workflow_dispatch:
     inputs:
       check_only:
