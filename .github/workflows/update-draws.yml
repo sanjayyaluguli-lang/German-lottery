@@ -38,7 +38,12 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
+
+      # Parser tests against markup captured from the live sites. Cheap, and it
+      # separates "the site changed" from "the parser was broken before it ran".
+      - name: Test parsers
+        run: node scripts/sources.test.mjs
 
       - name: Fetch latest draws
         env:
