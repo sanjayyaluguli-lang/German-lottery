@@ -1,1 +1,2588 @@
-{"version":1,"games":{}}
+{
+  "version": 1,
+  "games": {
+    "euro": {
+      "label": "EuroJackpot",
+      "main": {
+        "count": 5,
+        "min": 1,
+        "max": 50
+      },
+      "extra": {
+        "count": 2,
+        "min": 1,
+        "max": 12
+      },
+      "latest": {
+        "date": "2026-08-07",
+        "main": [
+          1,
+          3,
+          6,
+          13,
+          23
+        ],
+        "extra": [
+          5,
+          7
+        ],
+        "source": "euro-jackpot.net"
+      },
+      "count": 167,
+      "draws": [
+        {
+          "date": "2026-08-07",
+          "main": [
+            1,
+            3,
+            6,
+            13,
+            23
+          ],
+          "extra": [
+            5,
+            7
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-08-04",
+          "main": [
+            3,
+            17,
+            30,
+            35,
+            43
+          ],
+          "extra": [
+            1,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-07-31",
+          "main": [
+            4,
+            10,
+            20,
+            40,
+            41
+          ],
+          "extra": [
+            4,
+            6
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-07-28",
+          "main": [
+            11,
+            25,
+            40,
+            41,
+            45
+          ],
+          "extra": [
+            1,
+            5
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-07-24",
+          "main": [
+            4,
+            6,
+            8,
+            17,
+            22
+          ],
+          "extra": [
+            7,
+            10
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-07-21",
+          "main": [
+            4,
+            8,
+            10,
+            17,
+            37
+          ],
+          "extra": [
+            5,
+            7
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-07-17",
+          "main": [
+            6,
+            21,
+            31,
+            47,
+            48
+          ],
+          "extra": [
+            2,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-07-14",
+          "main": [
+            5,
+            6,
+            17,
+            34,
+            36
+          ],
+          "extra": [
+            3,
+            11
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-07-10",
+          "main": [
+            13,
+            25,
+            28,
+            42,
+            45
+          ],
+          "extra": [
+            5,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-07-07",
+          "main": [
+            6,
+            16,
+            24,
+            41,
+            46
+          ],
+          "extra": [
+            2,
+            3
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-07-03",
+          "main": [
+            4,
+            9,
+            20,
+            25,
+            28
+          ],
+          "extra": [
+            1,
+            3
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-06-30",
+          "main": [
+            12,
+            19,
+            34,
+            44,
+            50
+          ],
+          "extra": [
+            3,
+            8
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-06-26",
+          "main": [
+            17,
+            25,
+            35,
+            39,
+            41
+          ],
+          "extra": [
+            5,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-06-23",
+          "main": [
+            24,
+            27,
+            43,
+            48,
+            50
+          ],
+          "extra": [
+            4,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-06-19",
+          "main": [
+            16,
+            27,
+            37,
+            42,
+            45
+          ],
+          "extra": [
+            5,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-06-16",
+          "main": [
+            9,
+            26,
+            29,
+            37,
+            42
+          ],
+          "extra": [
+            1,
+            7
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-06-12",
+          "main": [
+            2,
+            4,
+            14,
+            18,
+            28
+          ],
+          "extra": [
+            9,
+            11
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-06-09",
+          "main": [
+            1,
+            14,
+            22,
+            39,
+            48
+          ],
+          "extra": [
+            8,
+            11
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-06-05",
+          "main": [
+            21,
+            23,
+            44,
+            47,
+            50
+          ],
+          "extra": [
+            1,
+            7
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-06-02",
+          "main": [
+            2,
+            36,
+            38,
+            40,
+            46
+          ],
+          "extra": [
+            7,
+            8
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-05-29",
+          "main": [
+            3,
+            20,
+            21,
+            42,
+            49
+          ],
+          "extra": [
+            5,
+            6
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-05-26",
+          "main": [
+            5,
+            11,
+            23,
+            33,
+            42
+          ],
+          "extra": [
+            10,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-05-22",
+          "main": [
+            5,
+            34,
+            35,
+            42,
+            46
+          ],
+          "extra": [
+            3,
+            5
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-05-19",
+          "main": [
+            10,
+            36,
+            37,
+            39,
+            47
+          ],
+          "extra": [
+            5,
+            6
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-05-15",
+          "main": [
+            1,
+            32,
+            33,
+            36,
+            37
+          ],
+          "extra": [
+            7,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-05-12",
+          "main": [
+            7,
+            15,
+            19,
+            28,
+            35
+          ],
+          "extra": [
+            3,
+            11
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-05-08",
+          "main": [
+            3,
+            17,
+            18,
+            31,
+            41
+          ],
+          "extra": [
+            6,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-05-05",
+          "main": [
+            1,
+            30,
+            33,
+            34,
+            43
+          ],
+          "extra": [
+            5,
+            10
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-05-01",
+          "main": [
+            10,
+            11,
+            13,
+            16,
+            27
+          ],
+          "extra": [
+            5,
+            7
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-04-28",
+          "main": [
+            19,
+            20,
+            41,
+            43,
+            46
+          ],
+          "extra": [
+            5,
+            7
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-04-24",
+          "main": [
+            6,
+            21,
+            29,
+            39,
+            44
+          ],
+          "extra": [
+            1,
+            5
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-04-21",
+          "main": [
+            31,
+            32,
+            36,
+            39,
+            47
+          ],
+          "extra": [
+            7,
+            8
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-04-17",
+          "main": [
+            16,
+            31,
+            35,
+            43,
+            44
+          ],
+          "extra": [
+            2,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-04-14",
+          "main": [
+            13,
+            22,
+            32,
+            46,
+            47
+          ],
+          "extra": [
+            6,
+            7
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-04-10",
+          "main": [
+            1,
+            6,
+            11,
+            18,
+            48
+          ],
+          "extra": [
+            10,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-04-07",
+          "main": [
+            2,
+            4,
+            16,
+            23,
+            27
+          ],
+          "extra": [
+            5,
+            8
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-04-03",
+          "main": [
+            9,
+            10,
+            18,
+            22,
+            37
+          ],
+          "extra": [
+            1,
+            11
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-03-31",
+          "main": [
+            5,
+            15,
+            18,
+            20,
+            35
+          ],
+          "extra": [
+            7,
+            8
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-03-27",
+          "main": [
+            21,
+            23,
+            25,
+            38,
+            40
+          ],
+          "extra": [
+            7,
+            11
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-03-24",
+          "main": [
+            9,
+            15,
+            23,
+            43,
+            48
+          ],
+          "extra": [
+            3,
+            5
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-03-20",
+          "main": [
+            2,
+            17,
+            21,
+            25,
+            30
+          ],
+          "extra": [
+            2,
+            6
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-03-17",
+          "main": [
+            12,
+            13,
+            16,
+            17,
+            37
+          ],
+          "extra": [
+            4,
+            11
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-03-13",
+          "main": [
+            7,
+            23,
+            37,
+            44,
+            47
+          ],
+          "extra": [
+            2,
+            6
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-03-10",
+          "main": [
+            2,
+            3,
+            17,
+            18,
+            28
+          ],
+          "extra": [
+            4,
+            10
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-03-06",
+          "main": [
+            8,
+            17,
+            26,
+            31,
+            47
+          ],
+          "extra": [
+            1,
+            6
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-03-03",
+          "main": [
+            1,
+            9,
+            14,
+            35,
+            49
+          ],
+          "extra": [
+            2,
+            10
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-02-27",
+          "main": [
+            7,
+            17,
+            19,
+            28,
+            47
+          ],
+          "extra": [
+            2,
+            7
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-02-24",
+          "main": [
+            4,
+            5,
+            26,
+            38,
+            48
+          ],
+          "extra": [
+            2,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-02-20",
+          "main": [
+            11,
+            17,
+            23,
+            36,
+            40
+          ],
+          "extra": [
+            5,
+            6
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-02-17",
+          "main": [
+            8,
+            23,
+            39,
+            40,
+            44
+          ],
+          "extra": [
+            6,
+            7
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-02-13",
+          "main": [
+            1,
+            21,
+            44,
+            45,
+            46
+          ],
+          "extra": [
+            2,
+            7
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-02-10",
+          "main": [
+            12,
+            19,
+            34,
+            39,
+            47
+          ],
+          "extra": [
+            4,
+            5
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-02-06",
+          "main": [
+            8,
+            14,
+            38,
+            41,
+            48
+          ],
+          "extra": [
+            1,
+            11
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-02-03",
+          "main": [
+            3,
+            20,
+            27,
+            37,
+            44
+          ],
+          "extra": [
+            1,
+            2
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-01-30",
+          "main": [
+            8,
+            13,
+            15,
+            17,
+            37
+          ],
+          "extra": [
+            3,
+            7
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-01-27",
+          "main": [
+            13,
+            18,
+            19,
+            29,
+            32
+          ],
+          "extra": [
+            8,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-01-23",
+          "main": [
+            18,
+            36,
+            39,
+            45,
+            50
+          ],
+          "extra": [
+            6,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-01-20",
+          "main": [
+            16,
+            26,
+            32,
+            37,
+            45
+          ],
+          "extra": [
+            2,
+            3
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-01-16",
+          "main": [
+            8,
+            16,
+            37,
+            39,
+            48
+          ],
+          "extra": [
+            5,
+            11
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-01-13",
+          "main": [
+            2,
+            16,
+            27,
+            33,
+            47
+          ],
+          "extra": [
+            6,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-01-09",
+          "main": [
+            1,
+            17,
+            19,
+            25,
+            41
+          ],
+          "extra": [
+            6,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-01-06",
+          "main": [
+            21,
+            23,
+            30,
+            33,
+            38
+          ],
+          "extra": [
+            8,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2026-01-02",
+          "main": [
+            10,
+            15,
+            29,
+            34,
+            38
+          ],
+          "extra": [
+            2,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-12-30",
+          "main": [
+            10,
+            18,
+            20,
+            23,
+            27
+          ],
+          "extra": [
+            1,
+            6
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-12-26",
+          "main": [
+            15,
+            21,
+            26,
+            29,
+            42
+          ],
+          "extra": [
+            4,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-12-23",
+          "main": [
+            24,
+            29,
+            35,
+            40,
+            41
+          ],
+          "extra": [
+            6,
+            7
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-12-19",
+          "main": [
+            8,
+            9,
+            15,
+            35,
+            45
+          ],
+          "extra": [
+            2,
+            5
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-12-16",
+          "main": [
+            12,
+            22,
+            28,
+            30,
+            31
+          ],
+          "extra": [
+            4,
+            11
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-12-12",
+          "main": [
+            2,
+            25,
+            27,
+            37,
+            50
+          ],
+          "extra": [
+            2,
+            11
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-12-09",
+          "main": [
+            2,
+            30,
+            32,
+            33,
+            37
+          ],
+          "extra": [
+            2,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-12-05",
+          "main": [
+            1,
+            4,
+            18,
+            22,
+            24
+          ],
+          "extra": [
+            6,
+            10
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-12-02",
+          "main": [
+            14,
+            30,
+            34,
+            35,
+            40
+          ],
+          "extra": [
+            4,
+            6
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-11-28",
+          "main": [
+            12,
+            16,
+            35,
+            46,
+            50
+          ],
+          "extra": [
+            3,
+            5
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-11-25",
+          "main": [
+            1,
+            23,
+            30,
+            35,
+            46
+          ],
+          "extra": [
+            4,
+            8
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-11-21",
+          "main": [
+            15,
+            24,
+            30,
+            45,
+            50
+          ],
+          "extra": [
+            5,
+            6
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-11-18",
+          "main": [
+            19,
+            25,
+            27,
+            41,
+            49
+          ],
+          "extra": [
+            3,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-11-14",
+          "main": [
+            3,
+            5,
+            20,
+            30,
+            37
+          ],
+          "extra": [
+            6,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-11-11",
+          "main": [
+            8,
+            24,
+            25,
+            41,
+            50
+          ],
+          "extra": [
+            8,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-11-07",
+          "main": [
+            13,
+            19,
+            22,
+            35,
+            40
+          ],
+          "extra": [
+            2,
+            8
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-11-04",
+          "main": [
+            3,
+            21,
+            22,
+            33,
+            39
+          ],
+          "extra": [
+            1,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-10-31",
+          "main": [
+            5,
+            11,
+            40,
+            41,
+            47
+          ],
+          "extra": [
+            1,
+            5
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-10-28",
+          "main": [
+            3,
+            4,
+            22,
+            45,
+            50
+          ],
+          "extra": [
+            9,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-10-24",
+          "main": [
+            12,
+            13,
+            27,
+            42,
+            43
+          ],
+          "extra": [
+            3,
+            4
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-10-21",
+          "main": [
+            6,
+            21,
+            30,
+            40,
+            46
+          ],
+          "extra": [
+            3,
+            4
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-10-17",
+          "main": [
+            18,
+            21,
+            34,
+            35,
+            46
+          ],
+          "extra": [
+            2,
+            3
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-10-14",
+          "main": [
+            8,
+            12,
+            13,
+            49,
+            50
+          ],
+          "extra": [
+            2,
+            4
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-10-10",
+          "main": [
+            4,
+            5,
+            24,
+            31,
+            41
+          ],
+          "extra": [
+            3,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-10-07",
+          "main": [
+            10,
+            22,
+            38,
+            42,
+            48
+          ],
+          "extra": [
+            2,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-10-03",
+          "main": [
+            1,
+            2,
+            7,
+            21,
+            27
+          ],
+          "extra": [
+            8,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-09-30",
+          "main": [
+            8,
+            11,
+            13,
+            24,
+            27
+          ],
+          "extra": [
+            3,
+            7
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-09-26",
+          "main": [
+            12,
+            24,
+            26,
+            35,
+            48
+          ],
+          "extra": [
+            1,
+            2
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-09-23",
+          "main": [
+            7,
+            18,
+            31,
+            32,
+            33
+          ],
+          "extra": [
+            10,
+            11
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-09-19",
+          "main": [
+            9,
+            37,
+            40,
+            41,
+            46
+          ],
+          "extra": [
+            1,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-09-16",
+          "main": [
+            8,
+            9,
+            14,
+            37,
+            39
+          ],
+          "extra": [
+            1,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-09-12",
+          "main": [
+            7,
+            22,
+            24,
+            33,
+            45
+          ],
+          "extra": [
+            4,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-09-09",
+          "main": [
+            14,
+            18,
+            24,
+            27,
+            50
+          ],
+          "extra": [
+            8,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-09-05",
+          "main": [
+            6,
+            14,
+            25,
+            29,
+            46
+          ],
+          "extra": [
+            7,
+            11
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-09-02",
+          "main": [
+            1,
+            5,
+            12,
+            38,
+            47
+          ],
+          "extra": [
+            7,
+            8
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-08-29",
+          "main": [
+            3,
+            5,
+            19,
+            23,
+            48
+          ],
+          "extra": [
+            1,
+            5
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-08-26",
+          "main": [
+            8,
+            14,
+            21,
+            26,
+            35
+          ],
+          "extra": [
+            4,
+            8
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-08-22",
+          "main": [
+            3,
+            14,
+            16,
+            22,
+            34
+          ],
+          "extra": [
+            7,
+            10
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-08-19",
+          "main": [
+            3,
+            4,
+            11,
+            33,
+            47
+          ],
+          "extra": [
+            6,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-08-15",
+          "main": [
+            5,
+            11,
+            20,
+            33,
+            43
+          ],
+          "extra": [
+            6,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-08-12",
+          "main": [
+            11,
+            16,
+            29,
+            37,
+            42
+          ],
+          "extra": [
+            1,
+            11
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-08-08",
+          "main": [
+            7,
+            16,
+            23,
+            41,
+            42
+          ],
+          "extra": [
+            1,
+            4
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-08-05",
+          "main": [
+            1,
+            18,
+            21,
+            22,
+            34
+          ],
+          "extra": [
+            1,
+            6
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-08-01",
+          "main": [
+            4,
+            11,
+            12,
+            20,
+            33
+          ],
+          "extra": [
+            3,
+            5
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-07-29",
+          "main": [
+            20,
+            21,
+            38,
+            43,
+            49
+          ],
+          "extra": [
+            6,
+            11
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-07-25",
+          "main": [
+            7,
+            8,
+            13,
+            29,
+            36
+          ],
+          "extra": [
+            4,
+            8
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-07-22",
+          "main": [
+            5,
+            20,
+            42,
+            46,
+            48
+          ],
+          "extra": [
+            7,
+            8
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-07-18",
+          "main": [
+            10,
+            12,
+            21,
+            25,
+            39
+          ],
+          "extra": [
+            2,
+            4
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-07-15",
+          "main": [
+            13,
+            28,
+            33,
+            37,
+            45
+          ],
+          "extra": [
+            6,
+            11
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-07-11",
+          "main": [
+            6,
+            12,
+            13,
+            43,
+            46
+          ],
+          "extra": [
+            6,
+            11
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-07-08",
+          "main": [
+            21,
+            27,
+            29,
+            34,
+            43
+          ],
+          "extra": [
+            6,
+            10
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-07-04",
+          "main": [
+            14,
+            23,
+            34,
+            41,
+            44
+          ],
+          "extra": [
+            5,
+            10
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-07-01",
+          "main": [
+            1,
+            9,
+            10,
+            12,
+            14
+          ],
+          "extra": [
+            6,
+            8
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-06-27",
+          "main": [
+            4,
+            14,
+            26,
+            29,
+            50
+          ],
+          "extra": [
+            3,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-06-24",
+          "main": [
+            20,
+            31,
+            35,
+            40,
+            44
+          ],
+          "extra": [
+            3,
+            4
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-06-20",
+          "main": [
+            6,
+            12,
+            18,
+            37,
+            46
+          ],
+          "extra": [
+            7,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-06-17",
+          "main": [
+            10,
+            13,
+            15,
+            33,
+            35
+          ],
+          "extra": [
+            7,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-06-13",
+          "main": [
+            1,
+            15,
+            18,
+            27,
+            46
+          ],
+          "extra": [
+            5,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-06-10",
+          "main": [
+            1,
+            17,
+            20,
+            28,
+            42
+          ],
+          "extra": [
+            2,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-06-06",
+          "main": [
+            7,
+            8,
+            11,
+            23,
+            39
+          ],
+          "extra": [
+            5,
+            11
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-06-03",
+          "main": [
+            6,
+            8,
+            19,
+            26,
+            30
+          ],
+          "extra": [
+            1,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-05-30",
+          "main": [
+            4,
+            5,
+            26,
+            29,
+            43
+          ],
+          "extra": [
+            5,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-05-27",
+          "main": [
+            6,
+            9,
+            17,
+            25,
+            41
+          ],
+          "extra": [
+            4,
+            10
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-05-23",
+          "main": [
+            11,
+            17,
+            19,
+            33,
+            40
+          ],
+          "extra": [
+            7,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-05-20",
+          "main": [
+            8,
+            19,
+            20,
+            21,
+            28
+          ],
+          "extra": [
+            7,
+            10
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-05-16",
+          "main": [
+            6,
+            8,
+            15,
+            27,
+            39
+          ],
+          "extra": [
+            6,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-05-13",
+          "main": [
+            14,
+            16,
+            19,
+            33,
+            34
+          ],
+          "extra": [
+            5,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-05-09",
+          "main": [
+            1,
+            5,
+            27,
+            36,
+            43
+          ],
+          "extra": [
+            5,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-05-06",
+          "main": [
+            1,
+            21,
+            22,
+            46,
+            49
+          ],
+          "extra": [
+            9,
+            10
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-05-02",
+          "main": [
+            3,
+            15,
+            22,
+            33,
+            35
+          ],
+          "extra": [
+            1,
+            7
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-04-29",
+          "main": [
+            17,
+            21,
+            27,
+            30,
+            34
+          ],
+          "extra": [
+            8,
+            11
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-04-25",
+          "main": [
+            13,
+            14,
+            40,
+            43,
+            45
+          ],
+          "extra": [
+            5,
+            8
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-04-22",
+          "main": [
+            10,
+            16,
+            23,
+            29,
+            38
+          ],
+          "extra": [
+            3,
+            5
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-04-18",
+          "main": [
+            7,
+            8,
+            12,
+            29,
+            44
+          ],
+          "extra": [
+            3,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-04-15",
+          "main": [
+            8,
+            11,
+            13,
+            33,
+            35
+          ],
+          "extra": [
+            1,
+            10
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-04-11",
+          "main": [
+            2,
+            26,
+            27,
+            28,
+            49
+          ],
+          "extra": [
+            1,
+            10
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-04-08",
+          "main": [
+            17,
+            39,
+            40,
+            41,
+            47
+          ],
+          "extra": [
+            5,
+            8
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-04-04",
+          "main": [
+            19,
+            23,
+            29,
+            37,
+            38
+          ],
+          "extra": [
+            2,
+            8
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-04-01",
+          "main": [
+            12,
+            17,
+            39,
+            41,
+            50
+          ],
+          "extra": [
+            9,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-03-28",
+          "main": [
+            2,
+            15,
+            19,
+            34,
+            49
+          ],
+          "extra": [
+            2,
+            6
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-03-25",
+          "main": [
+            3,
+            11,
+            30,
+            35,
+            50
+          ],
+          "extra": [
+            4,
+            5
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-03-21",
+          "main": [
+            8,
+            9,
+            12,
+            14,
+            16
+          ],
+          "extra": [
+            6,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-03-18",
+          "main": [
+            1,
+            7,
+            14,
+            47,
+            50
+          ],
+          "extra": [
+            3,
+            7
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-03-14",
+          "main": [
+            6,
+            13,
+            28,
+            37,
+            45
+          ],
+          "extra": [
+            5,
+            10
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-03-11",
+          "main": [
+            15,
+            18,
+            22,
+            23,
+            44
+          ],
+          "extra": [
+            1,
+            11
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-03-07",
+          "main": [
+            7,
+            11,
+            12,
+            32,
+            42
+          ],
+          "extra": [
+            1,
+            4
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-03-04",
+          "main": [
+            4,
+            12,
+            35,
+            37,
+            48
+          ],
+          "extra": [
+            4,
+            10
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-02-28",
+          "main": [
+            3,
+            4,
+            13,
+            20,
+            21
+          ],
+          "extra": [
+            8,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-02-25",
+          "main": [
+            28,
+            31,
+            38,
+            42,
+            48
+          ],
+          "extra": [
+            3,
+            10
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-02-21",
+          "main": [
+            18,
+            26,
+            29,
+            35,
+            36
+          ],
+          "extra": [
+            11,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-02-18",
+          "main": [
+            1,
+            9,
+            14,
+            19,
+            44
+          ],
+          "extra": [
+            2,
+            3
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-02-14",
+          "main": [
+            12,
+            14,
+            18,
+            45,
+            50
+          ],
+          "extra": [
+            2,
+            10
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-02-11",
+          "main": [
+            3,
+            12,
+            22,
+            28,
+            47
+          ],
+          "extra": [
+            1,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-02-07",
+          "main": [
+            15,
+            17,
+            27,
+            33,
+            45
+          ],
+          "extra": [
+            5,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-02-04",
+          "main": [
+            10,
+            18,
+            21,
+            41,
+            42
+          ],
+          "extra": [
+            3,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-01-31",
+          "main": [
+            1,
+            23,
+            32,
+            42,
+            47
+          ],
+          "extra": [
+            4,
+            11
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-01-28",
+          "main": [
+            2,
+            7,
+            28,
+            43,
+            46
+          ],
+          "extra": [
+            5,
+            12
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-01-24",
+          "main": [
+            2,
+            9,
+            16,
+            46,
+            47
+          ],
+          "extra": [
+            3,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-01-21",
+          "main": [
+            3,
+            17,
+            22,
+            28,
+            40
+          ],
+          "extra": [
+            4,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-01-17",
+          "main": [
+            7,
+            9,
+            14,
+            18,
+            31
+          ],
+          "extra": [
+            7,
+            8
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-01-14",
+          "main": [
+            10,
+            11,
+            17,
+            20,
+            30
+          ],
+          "extra": [
+            2,
+            6
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-01-10",
+          "main": [
+            17,
+            34,
+            38,
+            42,
+            48
+          ],
+          "extra": [
+            2,
+            11
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-01-07",
+          "main": [
+            1,
+            16,
+            20,
+            23,
+            44
+          ],
+          "extra": [
+            5,
+            9
+          ],
+          "source": "euro-jackpot.net"
+        },
+        {
+          "date": "2025-01-03",
+          "main": [
+            1,
+            20,
+            21,
+            27,
+            29
+          ],
+          "extra": [
+            8,
+            10
+          ],
+          "source": "euro-jackpot.net"
+        }
+      ]
+    },
+    "lotto": {
+      "label": "Lotto 6 aus 49",
+      "main": {
+        "count": 6,
+        "min": 1,
+        "max": 49
+      },
+      "extra": {
+        "count": 1,
+        "min": 0,
+        "max": 9
+      },
+      "latest": {
+        "date": "2026-08-08",
+        "main": [
+          2,
+          8,
+          22,
+          30,
+          38,
+          43
+        ],
+        "extra": [
+          4
+        ],
+        "source": "dielottozahlende.net"
+      },
+      "count": 1,
+      "draws": [
+        {
+          "date": "2026-08-08",
+          "main": [
+            2,
+            8,
+            22,
+            30,
+            38,
+            43
+          ],
+          "extra": [
+            4
+          ],
+          "source": "dielottozahlende.net"
+        }
+      ]
+    }
+  },
+  "updated": "2026-08-10T17:56:26.443Z"
+}
