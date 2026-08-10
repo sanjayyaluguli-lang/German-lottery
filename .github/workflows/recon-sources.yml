@@ -1,0 +1,21 @@
+name: Recon sources (temporary)
+
+# Diagnostic only: reports what each candidate results URL actually returns,
+# so the adapters can be written against real markup. Delete once the sources
+# in scripts/sources.mjs work.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  recon:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node scripts/recon.mjs
