@@ -14,22 +14,37 @@
         "max": 12
       },
       "latest": {
-        "date": "2026-09-01",
+        "date": "2026-09-04",
         "main": [
-          9,
+          5,
           14,
-          35,
-          43,
-          50
+          31,
+          33,
+          43
         ],
         "extra": [
           3,
-          7
+          4
         ],
-        "source": "euro-jackpot.net"
+        "source": "dielottozahlende.net"
       },
-      "count": 174,
+      "count": 175,
       "draws": [
+        {
+          "date": "2026-09-04",
+          "main": [
+            5,
+            14,
+            31,
+            33,
+            43
+          ],
+          "extra": [
+            3,
+            4
+          ],
+          "source": "dielottozahlende.net"
+        },
         {
           "date": "2026-09-01",
           "main": [
@@ -2794,5 +2809,5 @@
       ]
     }
   },
-  "updated": "2026-09-03T11:09:21.387Z"
+  "updated": "2026-09-04T23:09:26.373Z"
 }
