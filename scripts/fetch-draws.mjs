@@ -113,6 +113,11 @@ async function main() {
   }
 
   const file = await loadExisting();
+  // Snapshot of the draw data as it stands, so a run that finds nothing new can
+  // leave the file byte-for-byte untouched. `updated` used to be rewritten on
+  // every run, which defeated the workflow's "commit only if changed" guard —
+  // more than half the commits were that churn and carried no new results.
+  const before = JSON.stringify(file.games);
   let anyOk = false, totalAdded = 0;
 
   for (const gameKey of games) {
@@ -158,8 +163,13 @@ async function main() {
     process.exit(1);
   }
 
+  if (JSON.stringify(file.games) === before) {
+    log('\nNo new draws — data/draws.json left untouched.');
+    return;
+  }
+
   file.version = 1;
-  file.updated = new Date().toISOString();
+  file.updated = new Date().toISOString();   // when the data changed, not when it was checked
   await mkdir(dirname(OUT), { recursive: true });
   await writeFile(OUT, JSON.stringify(file, null, 2) + '\n');
   log(`\nWrote ${OUT} (${totalAdded} new draw${totalAdded === 1 ? '' : 's'}).`);

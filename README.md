@@ -181,8 +181,10 @@ It is a plain static file, so anything else may read it too.
 
 `.github/workflows/update-draws.yml` runs at 21:30 UTC on each of the four draw days — after
 EuroJackpot's 21:00 Tuesday/Friday draw and 6aus49's Wednesday/Saturday draw in both CET and CEST — plus
-a morning catch-up run in case a source was down or a result was published late. It only commits when
-`data/draws.json` actually changed.
+a morning catch-up run in case a source was down or a result was published late. It only commits when a
+new draw actually arrived — a run that finds nothing leaves the file byte-for-byte untouched, so the
+history holds results rather than heartbeats. `updated` therefore records when the data last *changed*;
+when it was last *checked* is the Actions run history.
 
 The workflow declares `permissions: contents: write`, which is enough to push its commit on a personal
 repository — no repository setting to change. If an organisation policy caps the default `GITHUB_TOKEN`
